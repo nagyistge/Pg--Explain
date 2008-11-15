@@ -1,0 +1,28 @@
+---
+name: PostgreSQL-Explain
+version: 0.05
+
+author:
+  - 'hubert depesz lubaczewski <depesz@depesz.com>'
+abstract: Object approach at reading explain analyze output
+license: perl
+resources:
+  license: http://dev.perl.org/licenses/
+requires:
+  Moose: 0
+build_requires:
+  Test::Deep: 0
+  Test::Exception: 0
+  Test::More: 0
+  autodie: 0
+provides:
+  PostgreSQL::Explain:
+    file: lib/PostgreSQL/Explain.pm
+    version: 0.03
+  PostgreSQL::Explain::Node:
+    file: lib/PostgreSQL/Explain/Node.pm
+    version: 0.03
+generated_by: Module::Build version 0.3
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.2.html
+  version: 1.2

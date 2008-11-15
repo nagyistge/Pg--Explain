@@ -1,0 +1,17 @@
+Revision history for PostgreSQL-Explain
+
+0.05    2008-11-11 17:01
+        Add handling of init and subplans. Added more test. Refactorig of parsing method. Basic functionality done.
+
+0.04    2008-10-27 00:40
+        Add handling of subnodes. Add extraction of scan info for "Index Scan Backward" nodes.
+
+0.03    2008-10-26 21:25
+        Make it parse index scans, handle basic extra-info, remove dependency on YAML, and make tests using Test::Deep.
+
+0.02    2008-10-19 20:07
+        More tests, and changes to make it more Moose-way
+
+0.01    2008-10-19 15:56
+        First version, Not much of functionality now, but builds, and passes simple test.
+
