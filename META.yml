@@ -1,6 +1,6 @@
 ---
-name: PostgreSQL-Explain
-version: 0.05
+name: Pg-Explain
+version: 0.06
 
 author:
   - 'hubert depesz lubaczewski <depesz@depesz.com>'
@@ -16,12 +16,12 @@ build_requires:
   Test::More: 0
   autodie: 0
 provides:
-  PostgreSQL::Explain:
-    file: lib/PostgreSQL/Explain.pm
-    version: 0.03
-  PostgreSQL::Explain::Node:
-    file: lib/PostgreSQL/Explain/Node.pm
-    version: 0.03
+  Pg::Explain:
+    file: lib/Pg/Explain.pm
+    version: 0.06
+  Pg::Explain::Node:
+    file: lib/Pg/Explain/Node.pm
+    version: 0.06
 generated_by: Module::Build version 0.3
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.2.html

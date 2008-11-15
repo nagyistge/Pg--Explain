@@ -5,7 +5,7 @@ use Test::Deep;
 use Data::Dumper;
 use autodie;
 
-use PostgreSQL::Explain;
+use Pg::Explain;
 
 my @tests = @ARGV;
 if (0 == scalar @tests) {
@@ -28,8 +28,8 @@ for my $test ( @tests ) {
 
     my $plan_file = 't/plans/' . $test . '-plan';
 
-    my $explain = PostgreSQL::Explain->new( 'source_file' => $plan_file );
-    isa_ok( $explain, 'PostgreSQL::Explain' );
+    my $explain = Pg::Explain->new( 'source_file' => $plan_file );
+    isa_ok( $explain, 'Pg::Explain' );
 
     my $expected = get_expected_from_file( $test );
 

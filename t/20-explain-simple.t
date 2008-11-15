@@ -1,7 +1,7 @@
 #!perl -T
 use Test::More tests => 2;
 
-use PostgreSQL::Explain;
+use Pg::Explain;
 
 my $plan = 'Seq Scan on tenk1  (cost=0.00..333.00 rows=10000 width=148)';
 
@@ -14,8 +14,8 @@ my $expected_output = {
     'scan_on'                => { 'table_name' => 'tenk1', }
 };
 
-my $explain = PostgreSQL::Explain->new( 'source' => $plan );
+my $explain = Pg::Explain->new( 'source' => $plan );
 
-isa_ok( $explain, 'PostgreSQL::Explain' );
+isa_ok( $explain, 'Pg::Explain' );
 
 is_deeply( $explain->top_node->get_struct(), $expected_output, 'Simple plan passed as string', );

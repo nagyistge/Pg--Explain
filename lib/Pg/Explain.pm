@@ -1,8 +1,8 @@
-package PostgreSQL::Explain;
+package Pg::Explain;
 
 use Moose;
 use Data::Dumper;
-use PostgreSQL::Explain::Node;
+use Pg::Explain::Node;
 use autodie;
 
 has 'source_file' => ( 'is' => 'rw', 'isa' => 'Str', 'clearer' => 'clear_source_file', );
@@ -14,22 +14,22 @@ has 'source' => (
 );
 has 'top_node' => (
     'is'      => 'rw',
-    'isa'     => 'PostgreSQL::Explain::Node',
+    'isa'     => 'Pg::Explain::Node',
     'lazy'    => 1,
     'builder' => 'parse_source',
 );
 
 =head1 NAME
 
-PostgreSQL::Explain - Object approach at reading explain analyze output
+Pg::Explain - Object approach at reading explain analyze output
 
 =head1 VERSION
 
-Version 0.05
+Version 0.06
 
 =cut
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 =head1 SYNOPSIS
 
@@ -37,12 +37,12 @@ Quick summary of what the module does.
 
 Perhaps a little code snippet.
 
-    use PostgreSQL::Explain;
+    use Pg::Explain;
 
-    my $explain = PostgreSQL::Explain->new('source_file' => 'some_file.out');
+    my $explain = Pg::Explain->new('source_file' => 'some_file.out');
     ...
 
-    my $explain = PostgreSQL::Explain->new(
+    my $explain = Pg::Explain->new(
         'source' => 'Seq Scan on tenk1  (cost=0.00..333.00 rows=10000 width=148)'
     );
     ...
@@ -73,7 +73,7 @@ sub BUILD {
 
 =head2 parse_source
 
-Internally (from ->BUILD()) called function which parses provided source, and generated appropriate PostgreSQL::Explain::Node objects.
+Internally (from ->BUILD()) called function which parses provided source, and generated appropriate Pg::Explain::Node objects.
 
 Top level node is stored as $self->top_node.
 
@@ -83,7 +83,7 @@ sub parse_source {
     my $self = shift;
 
     my $top_node         = undef;
-    my %element_at_depth = ();      # element is hashref, contains 2 keys: node (PostgreSQL::Explain::Node) and subelement-type, which can be: subnode, initplan or subplan.
+    my %element_at_depth = ();      # element is hashref, contains 2 keys: node (Pg::Explain::Node) and subelement-type, which can be: subnode, initplan or subplan.
 
     my @lines = split /\r?\n/, $self->source;
 
@@ -106,7 +106,7 @@ sub parse_source {
             }xms
            )
         {
-            my $new_node = PostgreSQL::Explain::Node->new(
+            my $new_node = Pg::Explain::Node->new(
                 'type'                   => $catch[ 1 ],
                 'estimated_startup_cost' => $catch[ 2 ],
                 'estimated_total_cost'   => $catch[ 3 ],
@@ -199,7 +199,7 @@ hubert depesz lubaczewski, C<< <depesz at depesz.com> >>
 =head1 BUGS
 
 Please report any bugs or feature requests to C<bug-postgresql-explain at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=PostgreSQL-Explain>.  I will be notified, and then you'll
+the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Pg-Explain>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
 
@@ -209,7 +209,7 @@ automatically be notified of progress on your bug as I make changes.
 
 You can find documentation for this module with the perldoc command.
 
-    perldoc PostgreSQL::Explain
+    perldoc Pg::Explain
 
 
 You can also look for information at:
@@ -218,19 +218,19 @@ You can also look for information at:
 
 =item * RT: CPAN's request tracker
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=PostgreSQL-Explain>
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Pg-Explain>
 
 =item * AnnoCPAN: Annotated CPAN documentation
 
-L<http://annocpan.org/dist/PostgreSQL-Explain>
+L<http://annocpan.org/dist/Pg-Explain>
 
 =item * CPAN Ratings
 
-L<http://cpanratings.perl.org/d/PostgreSQL-Explain>
+L<http://cpanratings.perl.org/d/Pg-Explain>
 
 =item * Search CPAN
 
-L<http://search.cpan.org/dist/PostgreSQL-Explain>
+L<http://search.cpan.org/dist/Pg-Explain>
 
 =back
 
@@ -248,4 +248,4 @@ under the same terms as Perl itself.
 
 =cut
 
-1;    # End of PostgreSQL::Explain
+1;    # End of Pg::Explain

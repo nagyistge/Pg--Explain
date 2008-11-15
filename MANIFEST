@@ -1,7 +1,7 @@
 Build.PL
 Changes
-lib/PostgreSQL/Explain.pm
-lib/PostgreSQL/Explain/Node.pm
+lib/Pg/Explain.pm
+lib/Pg/Explain/Node.pm
 MANIFEST			This list of files
 META.yml
 README

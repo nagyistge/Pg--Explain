@@ -1,4 +1,10 @@
-Revision history for PostgreSQL-Explain
+Revision history for Pg-Explain
+
+0.06    2008-11-15 21:27
+        Name changed to Pg::Explain after conversation on IRC. Main points:
+        - Pg is shorter
+        - Pg already exists
+        - Pg is used already by PostgreSQL related modules
 
 0.05    2008-11-11 17:01
         Add handling of init and subplans. Added more test. Refactorig of parsing method. Basic functionality done.

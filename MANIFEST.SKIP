@@ -45,4 +45,4 @@
 #   Mac OSX SMB mount metadata files
 \B\._
 # Avoid archives of this distribution
-\bPostgreSQL-Explain-[\d\.\_]+
+\bPg-Explain-[\d\.\_]+
