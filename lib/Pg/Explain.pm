@@ -71,6 +71,21 @@ sub BUILD {
     return;
 }
 
+=head2 top_node
+
+This method returns the top node of parsed plan.
+
+For example - in this plan:
+
+                           QUERY PLAN
+ --------------------------------------------------------------
+  Limit  (cost=0.00..0.01 rows=1 width=4)
+    ->  Seq Scan on test  (cost=0.00..14.00 rows=1000 width=4)
+
+top_node is Pg::Explain::Node element with type set to 'Limit'.
+
+Generally every output of plans should start with ->top_node(), and descend recursively in it, using subplans(), initplans() and sub_nodes() methods.
+
 =head2 parse_source
 
 Internally (from ->BUILD()) called function which parses provided source, and generated appropriate Pg::Explain::Node objects.
@@ -198,45 +213,13 @@ hubert depesz lubaczewski, C<< <depesz at depesz.com> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-postgresql-explain at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Pg-Explain>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
-
-
-
+Please report any bugs or feature requests to C<depesz at depesz.com>.
 
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
     perldoc Pg::Explain
-
-
-You can also look for information at:
-
-=over 4
-
-=item * RT: CPAN's request tracker
-
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Pg-Explain>
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/Pg-Explain>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/Pg-Explain>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/Pg-Explain>
-
-=back
-
-
-=head1 ACKNOWLEDGEMENTS
-
 
 =head1 COPYRIGHT & LICENSE
 
