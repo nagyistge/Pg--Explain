@@ -11,7 +11,7 @@ throws_ok
 
 throws_ok
     { my $explain = Pg::Explain->new( 'source_file' => 't/non-existant-file' ) }
-    qr{No such file or directory},
+    qr{Can't open 't/non-existant-file'},
     'Bad filename - caught ok.';
 
 throws_ok

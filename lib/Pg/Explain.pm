@@ -1,5 +1,5 @@
 package Pg::Explain;
-
+use strict;
 use Moose;
 use Data::Dumper;
 use Pg::Explain::Node;
@@ -25,11 +25,11 @@ Pg::Explain - Object approach at reading explain analyze output
 
 =head1 VERSION
 
-Version 0.06
+Version 0.07
 
 =cut
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 =head1 SYNOPSIS
 

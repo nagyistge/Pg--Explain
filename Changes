@@ -1,5 +1,13 @@
 Revision history for Pg-Explain
 
+0.07    2008-11-18 11:42
+        - Added missing dependancy - responsible for most of fails in cpan tests
+        - Changed the way to detect error thrown by autodie when opening file fails
+        - Renamed test plans to make them sort nicely
+        - New functionality: PE::Node->total_inclusive_time
+        - New functionality: PE::Node->total_exclusive_time
+        - New tests
+
 0.06    2008-11-15 21:27
         Name changed to Pg::Explain after conversation on IRC. Main points:
         - Pg is shorter

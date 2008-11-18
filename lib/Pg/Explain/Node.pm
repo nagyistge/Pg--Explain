@@ -1,5 +1,5 @@
 package Pg::Explain::Node;
-
+use strict;
 use Moose;
 use Data::Dumper;
 use Clone qw( clone );
@@ -23,15 +23,15 @@ has 'subplans'               => ( 'is' => 'rw', 'isa' => 'ArrayRef' );
 
 =head1 NAME
 
-Pg::Explain::Node - The great new Pg::Explain::Node!
+Pg::Explain::Node - Class representing single node from query plan
 
 =head1 VERSION
 
-Version 0.06
+Version 0.07
 
 =cut
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 =head1 SYNOPSIS
 
@@ -331,6 +331,38 @@ sub get_struct {
     $reply->{ 'subplans' }  = [ map { $_->get_struct } @{ $self->subplans } ]  if defined $self->subplans;
 
     return $reply;
+}
+
+=head2 total_inclusive_time
+
+Method for getting total node time, summarized with times of all subnodes, subplans and initplans - which is basically ->actual_loops * ->actual_time_last.
+
+=cut
+
+sub total_inclusive_time {
+    my $self = shift;
+    return unless defined $self->actual_loops;
+    return unless defined $self->actual_time_last;
+    return $self->actual_loops * $self->actual_time_last;
+}
+
+=head2 total_exclusive_time
+
+Method for getting total node time, without times of subnodes, subplans and initplans - which amounts to time PostgreSQL spent running this paricular node.
+
+=cut
+
+sub total_exclusive_time {
+    my $self = shift;
+
+    my $time = $self->total_inclusive_time;
+    return unless defined $time;
+
+    for my $node (map { @{ $_ } } grep { defined $_ } ( $self->sub_nodes, $self->initplans, $self->subplans ) ) {
+        $time -= $node->total_inclusive_time;
+    }
+
+    return $time;
 }
 
 =head1 AUTHOR
