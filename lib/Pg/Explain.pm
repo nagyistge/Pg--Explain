@@ -5,7 +5,7 @@ use Data::Dumper;
 use Pg::Explain::Node;
 use autodie;
 
-has 'source_file' => ( 'is' => 'rw', 'isa' => 'Str', 'clearer' => 'clear_source_file', );
+has 'source_file' => ( 'is' => 'rw', 'isa' => 'Str', 'clearer' => '_clear_source_file', );
 has 'source' => (
     'is'      => 'rw',
     'isa'     => 'Str',
@@ -25,11 +25,11 @@ Pg::Explain - Object approach at reading explain analyze output
 
 =head1 VERSION
 
-Version 0.07
+Version 0.08
 
 =cut
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 =head1 SYNOPSIS
 
@@ -49,7 +49,21 @@ Perhaps a little code snippet.
 
 =head1 FUNCTIONS
 
-=cut
+=head2 source_file
+
+Attribute only for object creation (it is cleared in constructor, after data loading).
+
+It is used to give filename to plan to be loaded.
+
+=head2 source
+
+Attribute which stores plan to be parsed. To be set while creating object.
+
+=head2 meta
+
+Method provided by Moose. From it's perldoc:
+
+ This is a method which provides access to the current class's metaclass.
 
 =head2 BUILD
 
@@ -202,7 +216,7 @@ sub _read_source_from_file {
     my $content = <$fh>;
     close $fh;
 
-    $self->clear_source_file;
+    $self->_clear_source_file;
 
     return $content;
 }

@@ -1,6 +1,6 @@
 ---
 name: Pg-Explain
-version: 0.07
+version: 0.08
 author:
   - 'hubert depesz lubaczewski <depesz@depesz.com>'
 abstract: Object approach at reading explain analyze output
@@ -18,10 +18,10 @@ build_requires:
 provides:
   Pg::Explain:
     file: lib/Pg/Explain.pm
-    version: 0.07
+    version: 0.08
   Pg::Explain::Node:
     file: lib/Pg/Explain/Node.pm
-    version: 0.07
+    version: 0.08
 generated_by: Module::Build version 0.3
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.2.html

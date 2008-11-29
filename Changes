@@ -1,5 +1,8 @@
 Revision history for Pg-Explain
 
+0.08    2008-11-24 21:11
+        - Add missing documentation
+
 0.07    2008-11-18 11:42
         - Added missing dependancy - responsible for most of fails in cpan tests
         - Changed the way to detect error thrown by autodie when opening file fails

@@ -27,11 +27,11 @@ Pg::Explain::Node - Class representing single node from query plan
 
 =head1 VERSION
 
-Version 0.07
+Version 0.08
 
 =cut
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 =head1 SYNOPSIS
 
@@ -146,6 +146,12 @@ For more details, check ->add_initplan method description.
 ArrayRef of Pg::Explain::Node objects, which represent sub plan.
 
 For more details, check ->add_subplan method description.
+
+=head2 meta
+
+Method provided by Moose. From it's perldoc:
+
+ This is a method which provides access to the current class's metaclass.
 
 =head2 BUILD
 
