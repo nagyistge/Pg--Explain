@@ -25,11 +25,11 @@ Pg::Explain - Object approach at reading explain analyze output
 
 =head1 VERSION
 
-Version 0.08
+Version 0.09
 
 =cut
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 =head1 SYNOPSIS
 
@@ -128,13 +128,20 @@ sub parse_source {
                 \( cost=(\d+\.\d+)\.\.(\d+\.\d+) \s+ rows=(\d+) \s+ width=(\d+) \)
                 (?:
                     \s+
-                    \( actual \s time=(\d+\.\d+)\.\.(\d+\.\d+) \s rows=(\d+) \s loops=(\d+) \)
+                    \(
+                        (?:
+                            actual \s time=(\d+\.\d+)\.\.(\d+\.\d+) \s rows=(\d+) \s loops=(\d+)
+                            |
+                            ( never \s+ executed )
+                        )
+                    \)
                 )?
                 \s*
                 \z
             }xms
            )
         {
+            $catch[9] = 0  if defined $catch[10] && $catch[10] =~ m{never \s+ executed }xms;
             my $new_node = Pg::Explain::Node->new(
                 'type'                   => $catch[ 1 ],
                 'estimated_startup_cost' => $catch[ 2 ],

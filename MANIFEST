@@ -15,6 +15,7 @@ t/30-explain-file.t
 t/40-parsed-access.t
 t/50-inclusive.t
 t/60-exclusive.t
+t/70-exclusive-2.t
 t/perlcriticrc
 t/plans/01-expect
 t/plans/01-plan
@@ -44,3 +45,11 @@ t/plans/13-expect
 t/plans/13-plan
 t/plans/14-expect
 t/plans/14-plan
+t/plans/15-expect
+t/plans/15-plan
+t/plans/16-expect
+t/plans/16-plan
+t/plans/17-expect
+t/plans/17-plan
+t/plans/18-expect
+t/plans/18-plan

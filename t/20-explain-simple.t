@@ -11,7 +11,8 @@ my $expected_output = {
     'estimated_startup_cost' => 0,
     'estimated_total_cost'   => 333,
     'type'                   => 'Seq Scan',
-    'scan_on'                => { 'table_name' => 'tenk1', }
+    'scan_on'                => { 'table_name' => 'tenk1', },
+    'is_analyzed'            => 0,
 };
 
 my $explain = Pg::Explain->new( 'source' => $plan );
