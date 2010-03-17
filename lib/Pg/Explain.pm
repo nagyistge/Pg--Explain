@@ -25,11 +25,11 @@ Pg::Explain - Object approach at reading explain analyze output
 
 =head1 VERSION
 
-Version 0.09
+Version 0.10
 
 =cut
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 =head1 SYNOPSIS
 
@@ -185,7 +185,7 @@ sub parse_source {
             }
 
         }
-        elsif ( $line =~ m{ \A (\s*) ((?:Sub|Init)Plan) \s* \z }xms ) {
+        elsif ( $line =~ m{ \A (\s*) ((?:Sub|Init)Plan) \s* (?: \d+ \s* )? \z }xms ) {
             my ( $prefix, $type ) = ($1, $2);
 
             my @remove_elements = grep { $_ >= length $prefix } keys %element_at_depth;

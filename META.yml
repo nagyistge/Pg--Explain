@@ -1,6 +1,6 @@
 ---
 name: Pg-Explain
-version: 0.09
+version: 0.10
 author:
   - 'hubert depesz lubaczewski <depesz@depesz.com>'
 abstract: Object approach at reading explain analyze output
