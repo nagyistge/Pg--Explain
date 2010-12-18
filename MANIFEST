@@ -16,6 +16,7 @@ t/40-parsed-access.t
 t/50-inclusive.t
 t/60-exclusive.t
 t/70-exclusive-2.t
+t/75-exclusive-3.t
 t/perlcriticrc
 t/plans/01-expect
 t/plans/01-plan

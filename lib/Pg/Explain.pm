@@ -25,11 +25,11 @@ Pg::Explain - Object approach at reading explain analyze output
 
 =head1 VERSION
 
-Version 0.10
+Version 0.11
 
 =cut
 
-our $VERSION = '0.10';
+our $VERSION = '0.11';
 
 =head1 SYNOPSIS
 
@@ -141,7 +141,6 @@ sub parse_source {
             }xms
            )
         {
-            $catch[9] = 0  if defined $catch[10] && $catch[10] =~ m{never \s+ executed }xms;
             my $new_node = Pg::Explain::Node->new(
                 'type'                   => $catch[ 1 ],
                 'estimated_startup_cost' => $catch[ 2 ],
@@ -153,6 +152,10 @@ sub parse_source {
                 'actual_rows'            => $catch[ 8 ],
                 'actual_loops'           => $catch[ 9 ],
             );
+            if ( defined $catch[ 10 ] && $catch[ 10 ] =~ m{never \s+ executed }xms ) {
+                $new_node->actual_loops( 0 );
+                $new_node->never_executed( 1 );
+            }
             my $element = { 'node' => $new_node, 'subelement-type' => 'subnode', };
 
             if ( 0 == scalar keys %element_at_depth ) {
@@ -161,7 +164,7 @@ sub parse_source {
                 next LINE;
             }
             my @existing_depths = sort { $a <=> $b } keys %element_at_depth;
-            for my $key ( grep { $_ >= length($catch[ 0 ]) } @existing_depths ) {
+            for my $key ( grep { $_ >= length( $catch[ 0 ] ) } @existing_depths ) {
                 delete $element_at_depth{ $key };
             }
 
@@ -186,10 +189,10 @@ sub parse_source {
 
         }
         elsif ( $line =~ m{ \A (\s*) ((?:Sub|Init)Plan) \s* (?: \d+ \s* )? \z }xms ) {
-            my ( $prefix, $type ) = ($1, $2);
+            my ( $prefix, $type ) = ( $1, $2 );
 
             my @remove_elements = grep { $_ >= length $prefix } keys %element_at_depth;
-            delete @element_at_depth{@remove_elements} unless 0 == scalar @remove_elements;
+            delete @element_at_depth{ @remove_elements } unless 0 == scalar @remove_elements;
 
             my $maximal_depth = ( sort { $b <=> $a } keys %element_at_depth )[ 0 ];
             my $previous_element = $element_at_depth{ $maximal_depth };
@@ -206,7 +209,7 @@ sub parse_source {
             next LINE unless defined $maximal_depth;
             my $previous_element = $element_at_depth{ $maximal_depth };
             next LINE unless $previous_element;
-            $previous_element->{'node'}->add_extra_info( $info );
+            $previous_element->{ 'node' }->add_extra_info( $info );
         }
     }
 
