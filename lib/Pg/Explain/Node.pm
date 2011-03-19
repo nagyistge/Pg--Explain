@@ -1,26 +1,9 @@
 package Pg::Explain::Node;
 use strict;
-use Moose;
-use Data::Dumper;
 use Clone qw( clone );
+use Carp;
 use warnings;
 use strict;
-
-has 'actual_loops'           => ( 'is' => 'rw', 'isa' => 'Maybe[Int]', 'required' => 1, );
-has 'actual_rows'            => ( 'is' => 'rw', 'isa' => 'Maybe[Int]', 'required' => 1, );
-has 'actual_time_first'      => ( 'is' => 'rw', 'isa' => 'Maybe[Num]', 'required' => 1, );
-has 'actual_time_last'       => ( 'is' => 'rw', 'isa' => 'Maybe[Num]', 'required' => 1, );
-has 'estimated_rows'         => ( 'is' => 'rw', 'isa' => 'Int',        'required' => 1, );
-has 'estimated_row_width'    => ( 'is' => 'rw', 'isa' => 'Int',        'required' => 1, );
-has 'estimated_startup_cost' => ( 'is' => 'rw', 'isa' => 'Num',        'required' => 1, );
-has 'estimated_total_cost'   => ( 'is' => 'rw', 'isa' => 'Num',        'required' => 1, );
-has 'type'                   => ( 'is' => 'rw', 'isa' => 'Str',        'required' => 1, );
-has 'scan_on'                => ( 'is' => 'rw', 'isa' => 'HashRef' );
-has 'extra_info'             => ( 'is' => 'rw', 'isa' => 'ArrayRef' );
-has 'sub_nodes'              => ( 'is' => 'rw', 'isa' => 'ArrayRef' );
-has 'initplans'              => ( 'is' => 'rw', 'isa' => 'ArrayRef' );
-has 'subplans'               => ( 'is' => 'rw', 'isa' => 'ArrayRef' );
-has 'never_executed'         => ( 'is' => 'rw', 'isa' => 'Bool' );
 
 =head1 NAME
 
@@ -28,11 +11,11 @@ Pg::Explain::Node - Class representing single node from query plan
 
 =head1 VERSION
 
-Version 0.11
+Version 0.20
 
 =cut
 
-our $VERSION = '0.11';
+our $VERSION = '0.20';
 
 =head1 SYNOPSIS
 
@@ -94,7 +77,7 @@ This cost is measured in units of "single-page seq scan".
 
 =head2 type
 
-Textual representation of type of current node. Some types for example:
+Textuuual representation of type of current node. Some types for example:
 
 =over
 
@@ -148,20 +131,65 @@ ArrayRef of Pg::Explain::Node objects, which represent sub plan.
 
 For more details, check ->add_subplan method description.
 
-=head2 meta
+=head2 never_executed
 
-Method provided by Moose. From it's perldoc:
-
- This is a method which provides access to the current class's metaclass.
-
-=head2 BUILD
-
-Moose-called function (from within constructor) which checks if provided node type is one of table scan types, and if so, extracts information from it to $self->scan_on structure.
+Returns true if given node was not executed, according to plan.
 
 =cut
 
-sub BUILD {
-    my $self = shift;
+sub actual_loops           { my $self = shift; $self->{ 'actual_loops' }           = $_[ 0 ] if 0 < scalar @_; return $self->{ 'actual_loops' }; }
+sub actual_rows            { my $self = shift; $self->{ 'actual_rows' }            = $_[ 0 ] if 0 < scalar @_; return $self->{ 'actual_rows' }; }
+sub actual_time_first      { my $self = shift; $self->{ 'actual_time_first' }      = $_[ 0 ] if 0 < scalar @_; return $self->{ 'actual_time_first' }; }
+sub actual_time_last       { my $self = shift; $self->{ 'actual_time_last' }       = $_[ 0 ] if 0 < scalar @_; return $self->{ 'actual_time_last' }; }
+sub estimated_rows         { my $self = shift; $self->{ 'estimated_rows' }         = $_[ 0 ] if 0 < scalar @_; return $self->{ 'estimated_rows' }; }
+sub estimated_row_width    { my $self = shift; $self->{ 'estimated_row_width' }    = $_[ 0 ] if 0 < scalar @_; return $self->{ 'estimated_row_width' }; }
+sub estimated_startup_cost { my $self = shift; $self->{ 'estimated_startup_cost' } = $_[ 0 ] if 0 < scalar @_; return $self->{ 'estimated_startup_cost' }; }
+sub estimated_total_cost   { my $self = shift; $self->{ 'estimated_total_cost' }   = $_[ 0 ] if 0 < scalar @_; return $self->{ 'estimated_total_cost' }; }
+sub extra_info             { my $self = shift; $self->{ 'extra_info' }             = $_[ 0 ] if 0 < scalar @_; return $self->{ 'extra_info' }; }
+sub initplans              { my $self = shift; $self->{ 'initplans' }              = $_[ 0 ] if 0 < scalar @_; return $self->{ 'initplans' }; }
+sub never_executed         { my $self = shift; $self->{ 'never_executed' }         = $_[ 0 ] if 0 < scalar @_; return $self->{ 'never_executed' }; }
+sub scan_on                { my $self = shift; $self->{ 'scan_on' }                = $_[ 0 ] if 0 < scalar @_; return $self->{ 'scan_on' }; }
+sub sub_nodes              { my $self = shift; $self->{ 'sub_nodes' }              = $_[ 0 ] if 0 < scalar @_; return $self->{ 'sub_nodes' }; }
+sub subplans               { my $self = shift; $self->{ 'subplans' }               = $_[ 0 ] if 0 < scalar @_; return $self->{ 'subplans' }; }
+sub type                   { my $self = shift; $self->{ 'type' }                   = $_[ 0 ] if 0 < scalar @_; return $self->{ 'type' }; }
+
+=head2 new
+
+Object constructor.
+
+=cut
+
+sub new {
+    my $class = shift;
+    my $self = bless {}, $class;
+
+    my %args;
+    if ( 0 == scalar @_ ) {
+        croak( 'Args should be passed as either hash or hashref' );
+    }
+    if ( 1 == scalar @_ ) {
+        if ( 'HASH' eq ref $_[ 0 ] ) {
+            %args = @{ $_[ 0 ] };
+        }
+        else {
+            croak( 'Args should be passed as either hash or hashref' );
+        }
+    }
+    elsif ( 1 == ( scalar( @_ ) % 2 ) ) {
+        croak( 'Args should be passed as either hash or hashref' );
+    }
+    else {
+        %args = @_;
+    }
+
+    @{ $self }{ keys %args } = values %args;
+
+    croak( 'estimated_rows has to be passed to constructor of explain node' )         unless defined $self->estimated_rows;
+    croak( 'estimated_row_width has to be passed to constructor of explain node' )    unless defined $self->estimated_row_width;
+    croak( 'estimated_startup_cost has to be passed to constructor of explain node' ) unless defined $self->estimated_startup_cost;
+    croak( 'estimated_total_cost has to be passed to constructor of explain node' )   unless defined $self->estimated_total_cost;
+    croak( 'type has to be passed to constructor of explain node' )                   unless defined $self->type;
+
     if ( $self->type =~ m{ \A ( Seq \s Scan | Bitmap \s+ Heap \s+ Scan) \s on \s (\S+) (?: \s+ (\S+) ) ? \z }xms ) {
         $self->type( $1 );
         $self->scan_on( { 'table_name' => $2, } );
@@ -181,7 +209,7 @@ sub BUILD {
         );
         $self->scan_on->{ 'table_alias' } = $4 if defined $4;
     }
-    return;
+    return $self;
 }
 
 =head2 add_extra_info

@@ -1,23 +1,8 @@
 package Pg::Explain;
 use strict;
-use Moose;
-use Data::Dumper;
 use Pg::Explain::Node;
 use autodie;
-
-has 'source_file' => ( 'is' => 'rw', 'isa' => 'Str', 'clearer' => '_clear_source_file', );
-has 'source' => (
-    'is'      => 'rw',
-    'isa'     => 'Str',
-    'lazy'    => 1,
-    'default' => \&_read_source_from_file,
-);
-has 'top_node' => (
-    'is'      => 'rw',
-    'isa'     => 'Pg::Explain::Node',
-    'lazy'    => 1,
-    'builder' => 'parse_source',
-);
+use Carp;
 
 =head1 NAME
 
@@ -25,11 +10,11 @@ Pg::Explain - Object approach at reading explain analyze output
 
 =head1 VERSION
 
-Version 0.11
+Version 0.20
 
 =cut
 
-our $VERSION = '0.11';
+our $VERSION = '0.20';
 
 =head1 SYNOPSIS
 
@@ -49,40 +34,62 @@ Perhaps a little code snippet.
 
 =head1 FUNCTIONS
 
-=head2 source_file
+=head2 _read_source_from_file
 
-Attribute only for object creation (it is cleared in constructor, after data loading).
-
-It is used to give filename to plan to be loaded.
+Helper function to read source from file.
 
 =head2 source
 
-Attribute which stores plan to be parsed. To be set while creating object.
-
-=head2 meta
-
-Method provided by Moose. From it's perldoc:
-
- This is a method which provides access to the current class's metaclass.
-
-=head2 BUILD
-
-Moose-called function which handles:
-
-=over
-
-=item * checking if only one of (source, source_file) parameters to constructor has been given
-
-=back
+Returns source (text version) of explain.
 
 =cut
 
-sub BUILD {
-    my $self = shift;
-    if ( ( defined $self->source ) && ( defined $self->source_file ) ) {
-        Moose->throw_error( "Only one of (source, source_file) parameters has to be provided" );
+sub source {
+    return shift->{ 'source' };
+}
+
+=head2 new
+
+Object constructor.
+
+Takes one of (only one!) (source, source_file) parameters, and either parses it from given source, or first reads given file.
+
+=cut
+
+sub new {
+    my $class = shift;
+    my $self = bless {}, $class;
+    my %args;
+    if ( 0 == scalar @_ ) {
+        croak( 'One of (source, source_file) parameters has to be provided)' );
     }
-    return;
+    if ( 1 == scalar @_ ) {
+        if ( 'HASH' eq ref $_[ 0 ] ) {
+            %args = @{ $_[ 0 ] };
+        }
+        else {
+            croak( 'One of (source, source_file) parameters has to be provided)' );
+        }
+    }
+    elsif ( 1 == ( scalar( @_ ) % 2 ) ) {
+        croak( 'One of (source, source_file) parameters has to be provided)' );
+    }
+    else {
+        %args = @_;
+    }
+
+    if ( $args{ 'source_file' } ) {
+        croak( 'Only one of (source, source_file) parameters has to be provided)' ) if $args{ 'source' };
+        $self->{ 'source_file' } = $args{ 'source_file' };
+        $self->_read_source_from_file();
+    }
+    elsif ( $args{ 'source' } ) {
+        $self->{ 'source' } = $args{ 'source' };
+    }
+    else {
+        croak( 'One of (source, source_file) parameters has to be provided)' );
+    }
+    return $self;
 }
 
 =head2 top_node
@@ -99,6 +106,14 @@ For example - in this plan:
 top_node is Pg::Explain::Node element with type set to 'Limit'.
 
 Generally every output of plans should start with ->top_node(), and descend recursively in it, using subplans(), initplans() and sub_nodes() methods.
+
+=cut
+
+sub top_node {
+    my $self = shift;
+    $self->parse_source() unless $self->{ 'top_node' };
+    return $self->{ 'top_node' };
+}
 
 =head2 parse_source
 
@@ -184,7 +199,7 @@ sub parse_source {
             }
             else {
                 my $msg = "Bad subelement-type in previous_element - this shouldn't happen - please contact author.\n";
-                Moose->throw_error( $msg );
+                croak( $msg );
             }
 
         }
@@ -212,23 +227,22 @@ sub parse_source {
             $previous_element->{ 'node' }->add_extra_info( $info );
         }
     }
-
-    return $top_node;
+    $self->{ 'top_node' } = $top_node;
+    return;
 }
 
 sub _read_source_from_file {
     my $self = shift;
 
-    Moose->throw_error( 'One of (source, source_file) parameters has to be provided' ) unless defined $self->source_file;
-
-    open my $fh, '<', $self->source_file;
+    open my $fh, '<', $self->{ 'source_file' };
     local $/ = undef;
     my $content = <$fh>;
     close $fh;
 
-    $self->_clear_source_file;
+    delete $self->{ 'source_file' };
+    $self->{ 'source' } = $content;
 
-    return $content;
+    return;
 }
 
 =head1 AUTHOR

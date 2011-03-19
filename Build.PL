@@ -14,7 +14,7 @@ my $builder = Module::Build->new(
         'Test::Exception' => 0,
     },
     add_to_cleanup => [ 'Pg-Explain-*' ],
-    requires       => { 'Moose' => 0, 'Clone' => 0, },
+    requires       => { 'Clone' => 0, },
 );
 
 $builder->create_build_script();

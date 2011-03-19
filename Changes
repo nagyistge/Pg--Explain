@@ -1,5 +1,8 @@
 Revision history for Pg-Explain
 
+0.20    2011/03/19
+        - Remove usage of Moose. It's faster, and will not cause unrelated test failures in CPAN reports.
+
 0.11    2010/12/16 23:34
         - Improve calculation of exclusive times, plus minor fixes [patch by filip.rembialkowski@gmail.com].
 

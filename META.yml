@@ -18,13 +18,12 @@ name: Pg-Explain
 provides:
   Pg::Explain:
     file: lib/Pg/Explain.pm
-    version: 0.11
+    version: 0.20
   Pg::Explain::Node:
     file: lib/Pg/Explain/Node.pm
-    version: 0.11
+    version: 0.20
 requires:
   Clone: 0
-  Moose: 0
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.11
+version: 0.20
