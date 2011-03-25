@@ -1,5 +1,11 @@
 Revision history for Pg-Explain
 
+????    2011/03/25
+        - Add ability to parse XML plans
+        - Add ability to parse JSON plans
+        - Add ability to parse YAML plans
+        - Add filter to make it possible to parse explains from pgAdmin3
+
 0.20    2011/03/19
         - Remove usage of Moose. It's faster, and will not cause unrelated test failures in CPAN reports.
 

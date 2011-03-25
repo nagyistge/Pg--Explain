@@ -1,6 +1,5 @@
 package Pg::Explain;
 use strict;
-use Pg::Explain::Node;
 use autodie;
 use Carp;
 
@@ -34,18 +33,39 @@ Perhaps a little code snippet.
 
 =head1 FUNCTIONS
 
-=head2 _read_source_from_file
-
-Helper function to read source from file.
-
 =head2 source
 
-Returns source (text version) of explain.
+Returns original source (text version) of explain.
 
 =cut
 
 sub source {
     return shift->{ 'source' };
+}
+
+=head2 source_filtered
+
+Returns filtered source explain.
+
+Currently there are only two filters:
+
+=over
+
+=item * remove quotes added by pgAdmin3
+
+=item * remove + character at the end of line, added by default psql config.
+
+=back
+
+=cut
+
+sub source_filtered {
+    my $self   = shift;
+    my $source = $self->source;
+
+    $source =~ s/^"(.*)"$/$1/gm;
+    $source =~ s/\s*\+\r?\n/\n/g;
+    return $source;
 }
 
 =head2 new
@@ -105,7 +125,8 @@ For example - in this plan:
 
 top_node is Pg::Explain::Node element with type set to 'Limit'.
 
-Generally every output of plans should start with ->top_node(), and descend recursively in it, using subplans(), initplans() and sub_nodes() methods.
+Generally every output of plans should start with ->top_node(), and descend
+recursively in it, using subplans(), initplans() and sub_nodes() methods.
 
 =cut
 
@@ -117,119 +138,42 @@ sub top_node {
 
 =head2 parse_source
 
-Internally (from ->BUILD()) called function which parses provided source, and generated appropriate Pg::Explain::Node objects.
-
-Top level node is stored as $self->top_node.
+Internally (from ->BUILD()) called function which checks which parser to use
+(text, json, xml, yaml), runs appropriate function, and stores top level
+node in $self->top_node.
 
 =cut
 
 sub parse_source {
     my $self = shift;
 
-    my $top_node         = undef;
-    my %element_at_depth = ();      # element is hashref, contains 2 keys: node (Pg::Explain::Node) and subelement-type, which can be: subnode, initplan or subplan.
+    my $source = $self->source_filtered;
 
-    my @lines = split /\r?\n/, $self->source;
-
-    LINE:
-    for my $line ( @lines ) {
-        if (
-            my @catch =
-            $line =~ m{
-                \A
-                (\s* (?:->)? \s*)
-                (\S.*?)
-                \s+
-                \( cost=(\d+\.\d+)\.\.(\d+\.\d+) \s+ rows=(\d+) \s+ width=(\d+) \)
-                (?:
-                    \s+
-                    \(
-                        (?:
-                            actual \s time=(\d+\.\d+)\.\.(\d+\.\d+) \s rows=(\d+) \s loops=(\d+)
-                            |
-                            ( never \s+ executed )
-                        )
-                    \)
-                )?
-                \s*
-                \z
-            }xms
-           )
-        {
-            my $new_node = Pg::Explain::Node->new(
-                'type'                   => $catch[ 1 ],
-                'estimated_startup_cost' => $catch[ 2 ],
-                'estimated_total_cost'   => $catch[ 3 ],
-                'estimated_rows'         => $catch[ 4 ],
-                'estimated_row_width'    => $catch[ 5 ],
-                'actual_time_first'      => $catch[ 6 ],
-                'actual_time_last'       => $catch[ 7 ],
-                'actual_rows'            => $catch[ 8 ],
-                'actual_loops'           => $catch[ 9 ],
-            );
-            if ( defined $catch[ 10 ] && $catch[ 10 ] =~ m{never \s+ executed }xms ) {
-                $new_node->actual_loops( 0 );
-                $new_node->never_executed( 1 );
-            }
-            my $element = { 'node' => $new_node, 'subelement-type' => 'subnode', };
-
-            if ( 0 == scalar keys %element_at_depth ) {
-                $element_at_depth{ length $catch[ 0 ] } = $element;
-                $top_node = $new_node;
-                next LINE;
-            }
-            my @existing_depths = sort { $a <=> $b } keys %element_at_depth;
-            for my $key ( grep { $_ >= length( $catch[ 0 ] ) } @existing_depths ) {
-                delete $element_at_depth{ $key };
-            }
-
-            my $maximal_depth = ( sort { $b <=> $a } keys %element_at_depth )[ 0 ];
-            my $previous_element = $element_at_depth{ $maximal_depth };
-
-            $element_at_depth{ length $catch[ 0 ] } = $element;
-
-            if ( $previous_element->{ 'subelement-type' } eq 'subnode' ) {
-                $previous_element->{ 'node' }->add_sub_node( $new_node );
-            }
-            elsif ( $previous_element->{ 'subelement-type' } eq 'initplan' ) {
-                $previous_element->{ 'node' }->add_initplan( $new_node );
-            }
-            elsif ( $previous_element->{ 'subelement-type' } eq 'subplan' ) {
-                $previous_element->{ 'node' }->add_subplan( $new_node );
-            }
-            else {
-                my $msg = "Bad subelement-type in previous_element - this shouldn't happen - please contact author.\n";
-                croak( $msg );
-            }
-
-        }
-        elsif ( $line =~ m{ \A (\s*) ((?:Sub|Init)Plan) \s* (?: \d+ \s* )? \z }xms ) {
-            my ( $prefix, $type ) = ( $1, $2 );
-
-            my @remove_elements = grep { $_ >= length $prefix } keys %element_at_depth;
-            delete @element_at_depth{ @remove_elements } unless 0 == scalar @remove_elements;
-
-            my $maximal_depth = ( sort { $b <=> $a } keys %element_at_depth )[ 0 ];
-            my $previous_element = $element_at_depth{ $maximal_depth };
-
-            $element_at_depth{ length $prefix } = {
-                'node'            => $previous_element->{ 'node' },
-                'subelement-type' => lc $type,
-            };
-            next LINE;
-        }
-        elsif ( $line =~ m{ \A (\s*) ( \S .* \S ) \s* \z }xms ) {
-            my ( $infoprefix, $info ) = ( $1, $2 );
-            my $maximal_depth = ( sort { $b <=> $a } grep { $_ < length $infoprefix } keys %element_at_depth )[ 0 ];
-            next LINE unless defined $maximal_depth;
-            my $previous_element = $element_at_depth{ $maximal_depth };
-            next LINE unless $previous_element;
-            $previous_element->{ 'node' }->add_extra_info( $info );
-        }
+    if ( $source =~ m{^\s*<explain xmlns="http://www.postgresql.org/2009/explain">}m ) {
+        require Pg::Explain::FromXML;
+        $self->{ 'top_node' } = Pg::Explain::FromXML->new()->parse_source( $source );
     }
-    $self->{ 'top_node' } = $top_node;
+    elsif ( $source =~ m{ ^ (\s*) \[ \s* \n .*? \1 \] \s* \n }xms ) {
+        require Pg::Explain::FromJSON;
+        $self->{ 'top_node' } = Pg::Explain::FromJSON->new()->parse_source( $source );
+    }
+    elsif ( $source =~ m{ ^ (\s*) - \s+ Plan: \s* \n }xms ) {
+        require Pg::Explain::FromYAML;
+        $self->{ 'top_node' } = Pg::Explain::FromYAML->new()->parse_source( $source );
+    }
+    else {
+        require Pg::Explain::FromText;
+        $self->{ 'top_node' } = Pg::Explain::FromText->new()->parse_source( $source );
+    }
+
     return;
 }
+
+=head2 _read_source_from_file
+
+Helper function to read source from file.
+
+=cut
 
 sub _read_source_from_file {
     my $self = shift;
