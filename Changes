@@ -1,5 +1,8 @@
 Revision history for Pg-Explain
 
+0.51    2011/03/26
+        - Fix calculation of exclusive time of nodes with CTE
+
 0.50    2011/03/26
         - Add support for CTE in plans
 

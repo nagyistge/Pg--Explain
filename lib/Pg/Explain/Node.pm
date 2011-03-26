@@ -11,11 +11,11 @@ Pg::Explain::Node - Class representing single node from query plan
 
 =head1 VERSION
 
-Version 0.50
+Version 0.51
 
 =cut
 
-our $VERSION = '0.50';
+our $VERSION = '0.51';
 
 =head1 SYNOPSIS
 
@@ -472,12 +472,6 @@ sub total_exclusive_time {
 
     for my $plan ( map { @{ $_ } } grep { defined $_ } ( $self->subplans ) ) {
         $time -= ( $plan->total_inclusive_time || 0 );
-    }
-
-    if ( $self->ctes ) {
-        for my $plan ( values %{ $self->ctes } ) {
-            $time -= ( $plan->total_inclusive_time || 0 );
-        }
     }
 
     # ignore negative times - these come from rounding errors on nodes with loops > 1.

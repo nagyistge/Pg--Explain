@@ -22,6 +22,7 @@ t/50-inclusive.t
 t/60-exclusive.t
 t/70-exclusive-2.t
 t/75-exclusive-3.t
+t/76-exclusive-4.t
 t/80-xml-plans.t
 t/80-xml-plans/1.expect
 t/80-xml-plans/1.xml
