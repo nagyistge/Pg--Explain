@@ -8,11 +8,11 @@ Pg::Explain::FromText - Parser for text based explains
 
 =head1 VERSION
 
-Version 0.20
+Version 0.50
 
 =cut
 
-our $VERSION = '0.20';
+our $VERSION = '0.50';
 
 =head1 SYNOPSIS
 
@@ -118,6 +118,10 @@ sub parse_source {
             elsif ( $previous_element->{ 'subelement-type' } eq 'subplan' ) {
                 $previous_element->{ 'node' }->add_subplan( $new_node );
             }
+            elsif ( $previous_element->{ 'subelement-type' } =~ /^cte:(.+)$/ ) {
+                $previous_element->{ 'node' }->add_cte( $1, $new_node );
+                delete $element_at_depth{ $maximal_depth };
+            }
             else {
                 my $msg = "Bad subelement-type in previous_element - this shouldn't happen - please contact author.\n";
                 croak( $msg );
@@ -137,6 +141,22 @@ sub parse_source {
                 'node'            => $previous_element->{ 'node' },
                 'subelement-type' => lc $type,
             };
+            next LINE;
+        }
+        elsif ( $line =~ m{ \A (\s*) CTE \s+ (\S+) \s* \z }xms ) {
+            my ($prefix, $cte_name) = ( $1, $2);
+
+            my @remove_elements = grep { $_ >= length $prefix } keys %element_at_depth;
+            delete @element_at_depth{ @remove_elements } unless 0 == scalar @remove_elements;
+
+            my $maximal_depth = ( sort { $b <=> $a } keys %element_at_depth )[ 0 ];
+            my $previous_element = $element_at_depth{ $maximal_depth };
+
+            $element_at_depth{ length $prefix } = {
+                'node'            => $previous_element->{ 'node' },
+                'subelement-type' => 'cte:' . $cte_name,
+            };
+
             next LINE;
         }
         elsif ( $line =~ m{ \A (\s*) ( \S .* \S ) \s* \z }xms ) {

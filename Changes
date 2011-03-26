@@ -1,6 +1,9 @@
 Revision history for Pg-Explain
 
-????    2011/03/25
+0.50    2011/03/26
+        - Add support for CTE in plans
+
+        2011/03/25
         - Add ability to parse XML plans
         - Add ability to parse JSON plans
         - Add ability to parse YAML plans

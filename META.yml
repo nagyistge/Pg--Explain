@@ -18,12 +18,30 @@ name: Pg-Explain
 provides:
   Pg::Explain:
     file: lib/Pg/Explain.pm
-    version: 0.20
+    version: 0.50
+  Pg::Explain::From:
+    file: lib/Pg/Explain/From.pm
+    version: 0.50
+  Pg::Explain::FromJSON:
+    file: lib/Pg/Explain/FromJSON.pm
+    version: 0.50
+  Pg::Explain::FromText:
+    file: lib/Pg/Explain/FromText.pm
+    version: 0.50
+  Pg::Explain::FromXML:
+    file: lib/Pg/Explain/FromXML.pm
+    version: 0.50
+  Pg::Explain::FromYAML:
+    file: lib/Pg/Explain/FromYAML.pm
+    version: 0.50
   Pg::Explain::Node:
     file: lib/Pg/Explain/Node.pm
-    version: 0.20
+    version: 0.50
 requires:
   Clone: 0
+  JSON: 0
+  XML::Simple: 0
+  YAML: 0
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.20
+version: 0.50

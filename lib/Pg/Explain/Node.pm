@@ -11,11 +11,11 @@ Pg::Explain::Node - Class representing single node from query plan
 
 =head1 VERSION
 
-Version 0.20
+Version 0.50
 
 =cut
 
-our $VERSION = '0.20';
+our $VERSION = '0.50';
 
 =head1 SYNOPSIS
 
@@ -131,6 +131,18 @@ ArrayRef of Pg::Explain::Node objects, which represent sub plan.
 
 For more details, check ->add_subplan method description.
 
+=head2 ctes
+
+HashRef of Pg::Explain::Node objects, which represent CTE plans.
+
+For more details, check ->add_cte method description.
+
+=head2 cte_order
+
+ArrayRef of names of CTE nodes in given node.
+
+For more details, check ->add_cte method description.
+
 =head2 never_executed
 
 Returns true if given node was not executed, according to plan.
@@ -152,6 +164,8 @@ sub scan_on                { my $self = shift; $self->{ 'scan_on' }             
 sub sub_nodes              { my $self = shift; $self->{ 'sub_nodes' }              = $_[ 0 ] if 0 < scalar @_; return $self->{ 'sub_nodes' }; }
 sub subplans               { my $self = shift; $self->{ 'subplans' }               = $_[ 0 ] if 0 < scalar @_; return $self->{ 'subplans' }; }
 sub type                   { my $self = shift; $self->{ 'type' }                   = $_[ 0 ] if 0 < scalar @_; return $self->{ 'type' }; }
+sub ctes                   { my $self = shift; $self->{ 'ctes' }                   = $_[ 0 ] if 0 < scalar @_; return $self->{ 'ctes' }; }
+sub cte_order              { my $self = shift; $self->{ 'cte_order' }              = $_[ 0 ] if 0 < scalar @_; return $self->{ 'cte_order' }; }
 
 =head2 new
 
@@ -208,6 +222,11 @@ sub new {
             }
         );
         $self->scan_on->{ 'table_alias' } = $4 if defined $4;
+    }
+    elsif ( $self->type =~ m{ \A ( CTE \s Scan ) \s on \s (\S+) (?: \s+ (\S+) ) ? \z }xms ) {
+        $self->type( $1 );
+        $self->scan_on( { 'cte_name' => $2, } );
+        $self->scan_on->{ 'cte_alias' } = $3 if defined $3;
     }
     return $self;
 }
@@ -296,6 +315,42 @@ sub add_initplan {
     return;
 }
 
+=head2 add_cte
+
+Adds new cte node. CTE has to be named, so this function requires 2 arguments: name, and cte object itself.
+
+It will be available at $node->cte( name ), or $node->ctes (returns hashref).
+
+Since we need order (ctes are stored unordered, in hash), there is also $node->cte_order() which returns arrayref of names.
+
+=cut
+
+sub add_cte {
+    my $self = shift;
+    my ( $name, $cte ) = @_;
+    if ( $self->ctes ) {
+        $self->ctes->{ $name } = $cte;
+        push @{ $self->cte_order }, $name;
+    }
+    else {
+        $self->ctes( { $name => $cte } );
+        $self->cte_order( [ $name ] );
+    }
+    return;
+}
+
+=head2 cte
+
+Returns CTE object that has given name.
+
+=cut
+
+sub cte {
+    my $self = shift;
+    my $name = shift;
+    return $self->ctes->{ $name };
+}
+
 =head2 add_sub_node
 
 Adds new sub node.
@@ -364,12 +419,21 @@ sub get_struct {
     $reply->{ 'type' }                   = $self->type                       if defined $self->type;
     $reply->{ 'scan_on' }                = clone( $self->scan_on )           if defined $self->scan_on;
     $reply->{ 'extra_info' }             = clone( $self->extra_info )        if defined $self->extra_info;
-    $reply->{ 'is_analyzed' }            = $self->is_analyzed;
+
+    $reply->{ 'is_analyzed' } = $self->is_analyzed;
 
     $reply->{ 'sub_nodes' } = [ map { $_->get_struct } @{ $self->sub_nodes } ] if defined $self->sub_nodes;
     $reply->{ 'initplans' } = [ map { $_->get_struct } @{ $self->initplans } ] if defined $self->initplans;
     $reply->{ 'subplans' }  = [ map { $_->get_struct } @{ $self->subplans } ]  if defined $self->subplans;
 
+    $reply->{ 'cte_order' } = clone( $self->cte_order ) if defined $self->cte_order;
+    if ( defined $self->ctes ) {
+        $reply->{ 'ctes' } = {};
+        while ( my ( $key, $cte_node ) = each %{ $self->ctes } ) {
+            my $struct = $cte_node->get_struct;
+            $reply->{ 'ctes' }->{ $key } = $struct;
+        }
+    }
     return $reply;
 }
 
@@ -408,6 +472,12 @@ sub total_exclusive_time {
 
     for my $plan ( map { @{ $_ } } grep { defined $_ } ( $self->subplans ) ) {
         $time -= ( $plan->total_inclusive_time || 0 );
+    }
+
+    if ( $self->ctes ) {
+        for my $plan ( values %{ $self->ctes } ) {
+            $time -= ( $plan->total_inclusive_time || 0 );
+        }
     }
 
     # ignore negative times - these come from rounding errors on nodes with loops > 1.

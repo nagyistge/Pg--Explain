@@ -61,6 +61,17 @@ t/82-yaml-plans/5.expect
 t/82-yaml-plans/5.yaml
 t/82-yaml-plans/6.expect
 t/82-yaml-plans/6.yaml
+t/90-ctes.t
+t/90-ctes/1-text.expect
+t/90-ctes/1-text.plan
+t/90-ctes/2-xml.expect
+t/90-ctes/2-xml.plan
+t/90-ctes/3-json.expect
+t/90-ctes/3-json.plan
+t/90-ctes/4-yaml.expect
+t/90-ctes/4-yaml.plan
+t/90-ctes/5-text.expect
+t/90-ctes/5-text.plan
 t/perlcriticrc
 t/plans/01-expect
 t/plans/01-plan
