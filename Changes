@@ -1,5 +1,8 @@
 Revision history for Pg-Explain
 
+0.52    2011/04/30
+        - Fix for handling windows-style end-of-line markers in pgAdmin output.
+
 0.51    2011/03/26
         - Fix calculation of exclusive time of nodes with CTE
 
