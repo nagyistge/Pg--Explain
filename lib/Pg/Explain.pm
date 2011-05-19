@@ -9,11 +9,11 @@ Pg::Explain - Object approach at reading explain analyze output
 
 =head1 VERSION
 
-Version 0.52
+Version 0.53
 
 =cut
 
-our $VERSION = '0.52';
+our $VERSION = '0.53';
 
 =head1 SYNOPSIS
 
@@ -63,7 +63,7 @@ sub source_filtered {
     my $self   = shift;
     my $source = $self->source;
 
-    $source =~ s/^"(.*)"\r?$/$1/gm;
+    $source =~ s/^(["'])(.*)\1\r?\n/$2\n/gm;
     $source =~ s/\s*\+\r?\n/\n/g;
     return $source;
 }

@@ -1,5 +1,9 @@
 Revision history for Pg-Explain
 
+0.53    2011/05/19
+        - Allow explain lines to be inside ' characters (some client does that, not sure which)
+        - Add missing "use Carp;"
+
 0.52    2011/04/30
         - Fix for handling windows-style end-of-line markers in pgAdmin output.
           Bug reported by Dave Jarvis.
