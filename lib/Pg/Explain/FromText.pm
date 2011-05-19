@@ -1,5 +1,6 @@
 package Pg::Explain::FromText;
 use strict;
+use Carp;
 use Pg::Explain::Node;
 
 =head1 NAME
