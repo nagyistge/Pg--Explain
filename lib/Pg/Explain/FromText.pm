@@ -59,7 +59,7 @@ sub parse_source {
             my @catch =
             $line =~ m{
                 \A
-                (\s* (?:->)? \s*)
+                (\s* -> \s* | \s* )
                 (\S.*?)
                 \s+
                 \( cost=(\d+\.\d+)\.\.(\d+\.\d+) \s+ rows=(\d+) \s+ width=(\d+) \)
