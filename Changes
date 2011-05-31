@@ -1,5 +1,9 @@
 Revision history for Pg-Explain
 
+0.54    2011/05/31
+        - Make the parsing run fast in Mojolicious environment
+        - Fix MANIFEST.SKIP to include .git
+
 0.53    2011/05/19
         - Allow explain lines to be inside ' characters (some client does that, not sure which)
         - Add missing "use Carp;"

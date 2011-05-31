@@ -1,0 +1,76 @@
+{
+   "abstract" : "Object approach at reading explain analyze output",
+   "author" : [
+      "hubert depesz lubaczewski <depesz@depesz.com>"
+   ],
+   "dynamic_config" : 1,
+   "generated_by" : "Module::Build version 0.38, CPAN::Meta::Converter version 2.110930",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Pg-Explain",
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "Test::Deep" : 0,
+            "Test::Exception" : 0,
+            "Test::More" : 0,
+            "autodie" : 0
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "Module::Build" : "0.38"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Clone" : 0,
+            "JSON" : 0,
+            "XML::Simple" : 0,
+            "YAML" : 0
+         }
+      }
+   },
+   "provides" : {
+      "Pg::Explain" : {
+         "file" : "lib/Pg/Explain.pm",
+         "version" : "0.54"
+      },
+      "Pg::Explain::From" : {
+         "file" : "lib/Pg/Explain/From.pm",
+         "version" : "0.54"
+      },
+      "Pg::Explain::FromJSON" : {
+         "file" : "lib/Pg/Explain/FromJSON.pm",
+         "version" : "0.54"
+      },
+      "Pg::Explain::FromText" : {
+         "file" : "lib/Pg/Explain/FromText.pm",
+         "version" : "0.54"
+      },
+      "Pg::Explain::FromXML" : {
+         "file" : "lib/Pg/Explain/FromXML.pm",
+         "version" : "0.54"
+      },
+      "Pg::Explain::FromYAML" : {
+         "file" : "lib/Pg/Explain/FromYAML.pm",
+         "version" : "0.54"
+      },
+      "Pg::Explain::Node" : {
+         "file" : "lib/Pg/Explain/Node.pm",
+         "version" : "0.54"
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "license" : [
+         "http://dev.perl.org/licenses/"
+      ]
+   },
+   "version" : "0.54"
+}
