@@ -77,7 +77,7 @@ This cost is measured in units of "single-page seq scan".
 
 =head2 type
 
-Textuuual representation of type of current node. Some types for example:
+Textual representation of type of current node. Some types for example:
 
 =over
 
@@ -490,6 +490,91 @@ sub is_analyzed {
     my $self = shift;
 
     return defined $self->actual_loops || $self->never_executed ? 1 : 0;
+}
+
+=head2 as_text
+
+Returns textual representation of explain nodes from given node down.
+
+This is used to build textual explains out of in-memory data structures.
+
+=cut
+
+sub as_text {
+    my $self   = shift;
+    my $prefix = shift;
+    $prefix = '' unless defined $prefix;
+
+    $prefix .= '->  ' if '' ne $prefix;
+    my $prefix_on_spaces = $prefix . "  ";
+    $prefix_on_spaces =~ s/[^ ]/ /g;
+
+    my $heading_line = $self->type;
+
+    if ( $self->scan_on ) {
+        my $S = $self->scan_on;
+        if ( $S->{ 'cte_name' } ) {
+            $heading_line .= " on " . $S->{ 'cte_name' };
+            $heading_line .= " " . $S->{ 'cte_alias' } if $S->{ 'cte_alias' };
+        }
+        elsif ( $S->{ 'index_name' } ) {
+            if ( $S->{ 'table_name' } ) {
+                $heading_line .= " using " . $S->{ 'index_name' } . " on " . $S->{ 'table_name' };
+                $heading_line .= " " . $S->{ 'table_alias' } if $S->{ 'table_alias' };
+            }
+            else {
+                $heading_line .= " on " . $S->{ 'index_name' };
+            }
+        }
+        else {
+            $heading_line .= " on " . $S->{ 'table_name' };
+            $heading_line .= " " . $S->{ 'table_alias' } if $S->{ 'table_alias' };
+        }
+    }
+    $heading_line .= sprintf '  (cost=%.3f..%.3f rows=%d width=%d)', $self->estimated_startup_cost, $self->estimated_total_cost, $self->estimated_rows, $self->estimated_row_width;
+    if ( $self->is_analyzed ) {
+        my $inner;
+        if ( 0 == $self->{ 'actual_loops' } ) {
+            $inner = 'never executed';
+        }
+        else {
+            $inner = sprintf 'actual time=%.3f..%.3f rows=%d loops=%d', $self->actual_time_first, $self->actual_time_last, $self->actual_rows, $self->actual_loops;
+        }
+        $heading_line .= " ($inner)";
+    }
+
+    my @lines = ();
+
+    push @lines, $prefix . $heading_line;
+    if ( $self->extra_info ) {
+        push @lines, $prefix_on_spaces . "  " . $_ for @{ $self->extra_info };
+    }
+    my $textual = join( "\n", @lines ) . "\n";
+
+
+    if ( $self->cte_order ) {
+        for my $cte_name ( @{ $self->cte_order } ) {
+            $textual .= $prefix_on_spaces . "  CTE " . $cte_name . "\n";
+            $textual .= $self->cte( $cte_name )->as_text( $prefix_on_spaces . "    " );
+        }
+    }
+
+    if ( $self->initplans ) {
+        for my $ip ( @{ $self->initplans } ) {
+            $textual .= $prefix_on_spaces . "InitPlan\n";
+            $textual .= $ip->as_text( $prefix_on_spaces . "  " );
+        }
+    }
+    if ( $self->sub_nodes ) {
+        $textual .= $_->as_text( $prefix_on_spaces ) for @{ $self->sub_nodes };
+    }
+    if ( $self->subplans ) {
+        for my $ip ( @{ $self->subplans } ) {
+            $textual .= $prefix_on_spaces . "SubPlan\n";
+            $textual .= $ip->as_text( $prefix_on_spaces . "  " );
+        }
+    }
+    return $textual;
 }
 
 =head1 AUTHOR

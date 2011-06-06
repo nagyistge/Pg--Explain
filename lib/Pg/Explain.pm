@@ -189,6 +189,19 @@ sub _read_source_from_file {
     return;
 }
 
+=head2 as_text
+
+Returns parsed plan back as plain text format (regenerated from in-memory structure).
+
+This is mostly useful for (future at the moment) anonymizations.
+
+=cut
+
+sub as_text {
+    my $self = shift;
+    return $self->top_node->as_text( );
+}
+
 =head1 AUTHOR
 
 hubert depesz lubaczewski, C<< <depesz at depesz.com> >>
