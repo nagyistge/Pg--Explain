@@ -554,7 +554,7 @@ sub as_text {
 
     if ( $self->cte_order ) {
         for my $cte_name ( @{ $self->cte_order } ) {
-            $textual .= $prefix_on_spaces . "  CTE " . $cte_name . "\n";
+            $textual .= $prefix_on_spaces . "CTE " . $cte_name . "\n";
             $textual .= $self->cte( $cte_name )->as_text( $prefix_on_spaces . "    " );
         }
     }
