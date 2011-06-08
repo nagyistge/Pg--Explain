@@ -32,7 +32,8 @@
             "Clone" : 0,
             "JSON" : 0,
             "XML::Simple" : 0,
-            "YAML" : 0
+            "YAML" : 0,
+            "Digest::SHA1" : 0
          }
       }
    },
