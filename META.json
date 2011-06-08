@@ -4,7 +4,7 @@
       "hubert depesz lubaczewski <depesz@depesz.com>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.38, CPAN::Meta::Converter version 2.110930",
+   "generated_by" : "Module::Build version 0.38, CPAN::Meta::Converter version 2.110440",
    "license" : [
       "perl_5"
    ],
@@ -30,10 +30,11 @@
       "runtime" : {
          "requires" : {
             "Clone" : 0,
+            "Digest::SHA1" : 0,
+            "HOP::Lexer" : 0,
             "JSON" : 0,
             "XML::Simple" : 0,
-            "YAML" : 0,
-            "Digest::SHA1" : 0
+            "YAML" : 0
          }
       }
    },
@@ -64,6 +65,10 @@
       },
       "Pg::Explain::Node" : {
          "file" : "lib/Pg/Explain/Node.pm",
+         "version" : "0.54"
+      },
+      "Pg::Explain::StringAnonymizer" : {
+         "file" : "lib/Pg/Explain/StringAnonymizer.pm",
          "version" : "0.54"
       }
    },

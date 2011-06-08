@@ -103,6 +103,7 @@ t/17-as_text/24-plan
 t/17-as_text/25-plan
 t/17-as_text/26-plan
 t/18-stringanonymizer.t
+t/19-anonymization.t
 t/perlcriticrc
 t/plans/01-expect
 t/plans/01-plan

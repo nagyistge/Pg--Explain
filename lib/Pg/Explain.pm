@@ -2,6 +2,7 @@ package Pg::Explain;
 use strict;
 use autodie;
 use Carp;
+use Pg::Explain::StringAnonymizer;
 
 =head1 NAME
 
@@ -200,6 +201,24 @@ This is mostly useful for (future at the moment) anonymizations.
 sub as_text {
     my $self = shift;
     return $self->top_node->as_text( );
+}
+
+=head2 anonymize
+
+Used to remove all individual values from the explain, while still retaining
+all values that are needed to see what's wrong.
+
+=cut
+
+sub anonymize {
+    my $self = shift;
+
+    my $anonymizer = Pg::Explain::StringAnonymizer->new();
+    $self->top_node->anonymize_gathering( $anonymizer );
+    $anonymizer->finalize();
+    $self->top_node->anonymize_substitute( $anonymizer );
+
+    return;
 }
 
 =head1 AUTHOR

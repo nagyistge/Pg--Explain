@@ -1,6 +1,7 @@
 package Pg::Explain::Node;
 use strict;
 use Clone qw( clone );
+use HOP::Lexer qw( string_lexer );
 use Carp;
 use warnings;
 use strict;
@@ -577,6 +578,187 @@ sub as_text {
     return $textual;
 }
 
+=head2 anonymize_gathering
+
+First stage of anonymization - gathering of all possible strings that could and should be anonymized.
+
+=cut
+
+sub anonymize_gathering {
+    my $self = shift;
+    my $anonymizer = shift;
+
+    if ($self->scan_on) {
+        $anonymizer->add( values %{ $self->scan_on } );
+    }
+
+    if ($self->extra_info) {
+        for my $line ( @{ $self->extra_info } ) {
+            my $copy = $line;
+            next unless $copy =~ s{^((?:Join Filter|Index Cond|Recheck Cond|Hash Cond|Merge Cond|Filter|Sort Key):\s+)(.*)$}{$2};
+            my $prefix = $1;
+            my $lexer = $self->_make_lexer( $copy );
+            while ( my $x = $lexer->() ) {
+                next unless ref $x;
+                $anonymizer->add( $x->[1] ) if $x->[0] =~ m{\A (?: STRING_LITERAL | QUOTED_IDENTIFIER | IDENTIFIER ) \z}x;
+            }
+        }
+    }
+
+    for my $key (qw( sub_nodes initplans subplans ) ) {
+        next unless $self->{$key};
+        $_->anonymize_gathering( $anonymizer ) for @{ $self->{$key} };
+    }
+
+    if ($self->{'ctes'}) {
+        $_->anonymize_gathering( $anonymizer ) for values %{ $self->{'ctes'} };
+    }
+    return;
+}
+
+=head2 _make_lexer
+
+Helper function which creates HOP::Lexer based lexer for given line of input
+
+=cut
+
+sub _make_lexer {
+    my $self = shift;
+    my $data = shift;
+    my @input_tokens = (
+        [ 'STRING_LITERAL',    qr{'(?:''|[^']+)+'} ],
+        [ 'QUOTED_IDENTIFIER', qr{"(?:""|[^"]+)+"} ],
+        [ 'AND',               qr{AND}i ],
+        [ 'ANY',               qr{ANY}i ],
+        [ 'ARRAY',             qr{ARRAY}i ],
+        [ 'AS',                qr{AS}i ],
+        [ 'ASC',               qr{ASC}i ],
+        [ 'CASE',              qr{CASE}i ],
+        [ 'CAST',              qr{CAST}i ],
+        [ 'CHECK',             qr{CHECK}i ],
+        [ 'COLLATE',           qr{COLLATE}i ],
+        [ 'COLUMN',            qr{COLUMN}i ],
+        [ 'CURRENT_CATALOG',   qr{CURRENT_CATALOG}i ],
+        [ 'CURRENT_DATE',      qr{CURRENT_DATE}i ],
+        [ 'CURRENT_ROLE',      qr{CURRENT_ROLE}i ],
+        [ 'CURRENT_TIME',      qr{CURRENT_TIME}i ],
+        [ 'CURRENT_TIMESTAMP', qr{CURRENT_TIMESTAMP}i ],
+        [ 'CURRENT_USER',      qr{CURRENT_USER}i ],
+        [ 'DEFAULT',           qr{DEFAULT}i ],
+        [ 'DESC',              qr{DESC}i ],
+        [ 'DISTINCT',          qr{DISTINCT}i ],
+        [ 'DO',                qr{DO}i ],
+        [ 'ELSE',              qr{ELSE}i ],
+        [ 'END',               qr{END}i ],
+        [ 'EXCEPT',            qr{EXCEPT}i ],
+        [ 'FALSE',             qr{FALSE}i ],
+        [ 'FETCH',             qr{FETCH}i ],
+        [ 'FOR',               qr{FOR}i ],
+        [ 'FOREIGN',           qr{FOREIGN}i ],
+        [ 'FROM',              qr{FROM}i ],
+        [ 'IN',                qr{IN}i ],
+        [ 'INITIALLY',         qr{INITIALLY}i ],
+        [ 'INTERSECT',         qr{INTERSECT}i ],
+        [ 'INTO',              qr{INTO}i ],
+        [ 'LEADING',           qr{LEADING}i ],
+        [ 'LIMIT',             qr{LIMIT}i ],
+        [ 'LOCALTIME',         qr{LOCALTIME}i ],
+        [ 'LOCALTIMESTAMP',    qr{LOCALTIMESTAMP}i ],
+        [ 'NOT',               qr{NOT}i ],
+        [ 'NULL',              qr{NULL}i ],
+        [ 'OFFSET',            qr{OFFSET}i ],
+        [ 'ON',                qr{ON}i ],
+        [ 'ONLY',              qr{ONLY}i ],
+        [ 'OR',                qr{OR}i ],
+        [ 'ORDER',             qr{ORDER}i ],
+        [ 'PLACING',           qr{PLACING}i ],
+        [ 'PRIMARY',           qr{PRIMARY}i ],
+        [ 'REFERENCES',        qr{REFERENCES}i ],
+        [ 'RETURNING',         qr{RETURNING}i ],
+        [ 'SESSION_USER',      qr{SESSION_USER}i ],
+        [ 'SOME',              qr{SOME}i ],
+        [ 'SYMMETRIC',         qr{SYMMETRIC}i ],
+        [ 'THEN',              qr{THEN}i ],
+        [ 'TO',                qr{TO}i ],
+        [ 'TRAILING',          qr{TRAILING}i ],
+        [ 'TRUE',              qr{TRUE}i ],
+        [ 'UNION',             qr{UNION}i ],
+        [ 'UNIQUE',            qr{UNIQUE}i ],
+        [ 'USER',              qr{USER}i ],
+        [ 'USING',             qr{USING}i ],
+        [ 'WHEN',              qr{WHEN}i ],
+        [ 'WHERE',             qr{WHERE}i ],
+        [ 'CAST:',             qr{::}i ],
+        [ 'COMMA',             qr{,}i ],
+        [ 'DOT',               qr{\.}i ],
+        [ 'LEFT_PARENTHESIS',  qr{\(}i ],
+        [ 'RIGHT_PARENTHESIS', qr{\)}i ],
+        [ 'DOT',               qr{\.}i ],
+        [ 'STAR',              qr{[*]} ],
+        [ 'OP',                qr{[+=/<>!~@-]} ],
+        [ 'NUM',               qr{-?(?:\d*\.\d+|\d+)} ],
+        [ 'IDENTIFIER',        qr{[a-z_][a-z0-9_]*}i ],
+        [ 'SPACE',             qr{\s+} ],
+    );
+    return string_lexer( $data, @input_tokens );
+}
+
+=head2 anonymize_substitute
+
+Second stage of anonymization - actual changing strings into anonymized versions.
+
+=cut
+
+sub anonymize_substitute {
+    my $self = shift;
+    my $anonymizer = shift;
+
+    if ($self->scan_on) {
+        while ( my ($key, $value) = each %{ $self->scan_on } ) {
+            $self->scan_on->{$key} = $anonymizer->anonymized( $value );
+        }
+    }
+    if ($self->extra_info) {
+        my @new_extra_info = ();
+        for my $line ( @{ $self->extra_info } ) {
+            unless ( $line =~ s{^((?:Join Filter|Index Cond|Recheck Cond|Hash Cond|Merge Cond|Filter|Sort Key):\s+)(.*)$}{$2} ) {
+                push @new_extra_info, $line;
+                next;
+            }
+            my $output = $1;
+            my $lexer = $self->_make_lexer( $line );
+            while ( my $x = $lexer->() ) {
+                if (ref $x) {
+                    if ( $x->[0] eq 'STRING_LITERAL' ) {
+                        $output .= "'" . $anonymizer->anonymized( $x->[1] ) . "'";
+                    } elsif ( $x->[0] eq 'QUOTED_IDENTIFIER' ) {
+                        $output .= '"' . $anonymizer->anonymized( $x->[1] ) . '"';
+                    } elsif ( $x->[0] eq 'IDENTIFIER' ) {
+                        $output .= $anonymizer->anonymized( $x->[1] );
+                    } else {
+                        $output .= $x->[1];
+                    }
+                } else {
+                    $output .= $x;
+                }
+            }
+            push @new_extra_info, $output;
+        }
+        $self->{'extra_info'} = \@new_extra_info;
+    }
+
+
+    for my $key (qw( sub_nodes initplans subplans ) ) {
+        next unless $self->{$key};
+        $_->anonymize_substitute( $anonymizer ) for @{ $self->{$key} };
+    }
+
+    if ($self->{'ctes'}) {
+        $_->anonymize_substitute( $anonymizer ) for values %{ $self->{'ctes'} };
+    }
+    return;
+}
+
 =head1 AUTHOR
 
 hubert depesz lubaczewski, C<< <depesz at depesz.com> >>
@@ -597,7 +779,6 @@ Copyright 2008 hubert depesz lubaczewski, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
-
 
 =cut
 
