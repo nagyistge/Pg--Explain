@@ -1,1 +1,5 @@
 MANIFEST.bak
+Build
+MYMETA.*
+_build
+blib
