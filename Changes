@@ -1,5 +1,9 @@
 Revision history for Pg-Explain
 
+0.60    2011/06/11
+        - Added anonymization of plans.
+        - Make it possible to generate textual plan from parsed one
+
 0.54    2011/05/31
         - Make the parsing run fast in Mojolicious environment
         - Fix MANIFEST.SKIP to include .git

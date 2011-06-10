@@ -12,11 +12,11 @@ Pg::Explain::Node - Class representing single node from query plan
 
 =head1 VERSION
 
-Version 0.54
+Version 0.60
 
 =cut
 
-our $VERSION = '0.54';
+our $VERSION = '0.60';
 
 =head1 SYNOPSIS
 
