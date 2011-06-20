@@ -1,5 +1,8 @@
 Revision history for Pg-Explain
 
+0.61    2011/06/20
+        - Add handling of plans with trailing " character, but without leading " character.
+
 0.60    2011/06/11
         - Added anonymization of plans.
         - Make it possible to generate textual plan from parsed one
