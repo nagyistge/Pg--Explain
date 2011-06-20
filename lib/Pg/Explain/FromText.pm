@@ -55,6 +55,10 @@ sub parse_source {
 
     LINE:
     for my $line ( @lines ) {
+
+        # There could be stray " at the end. No idea why, but some people paste such explains on explain.depesz.com
+        $line =~ s/"\z//;
+
         if (
             my @catch =
             $line =~ m{
