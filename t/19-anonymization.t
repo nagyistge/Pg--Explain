@@ -5,7 +5,7 @@ use Test::Deep;
 use Test::Exception;
 use Data::Dumper;
 use autodie;
-plan 'tests' => 10;
+plan 'tests' => 12;
 
 use Pg::Explain;
 
@@ -42,6 +42,8 @@ ok( $textual =~ /::"char"\[\]/, 'anonymize() preserves type casting' );
 ok( $textual =~ /::name\b/, 'anonymize() preserves type casting' );
 ok( $textual =~ /::text\b/, 'anonymize() preserves type casting' );
 ok( $textual !~ /timestamp with time zone/, 'anonymize() hides string literals' );
+ok( $textual !~ /nspname/, 'anonymize() hides column names' );
+ok( $textual !~ /pg_class/, 'anonymize() hides relation names' );
 
 my $reparsed = Pg::Explain->new( 'source' => $textual );
 isa_ok( $reparsed,           'Pg::Explain' );

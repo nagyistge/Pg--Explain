@@ -552,7 +552,6 @@ sub as_text {
     }
     my $textual = join( "\n", @lines ) . "\n";
 
-
     if ( $self->cte_order ) {
         for my $cte_name ( @{ $self->cte_order } ) {
             $textual .= $prefix_on_spaces . "CTE " . $cte_name . "\n";
@@ -585,33 +584,33 @@ First stage of anonymization - gathering of all possible strings that could and 
 =cut
 
 sub anonymize_gathering {
-    my $self = shift;
+    my $self       = shift;
     my $anonymizer = shift;
 
-    if ($self->scan_on) {
+    if ( $self->scan_on ) {
         $anonymizer->add( values %{ $self->scan_on } );
     }
 
-    if ($self->extra_info) {
+    if ( $self->extra_info ) {
         for my $line ( @{ $self->extra_info } ) {
             my $copy = $line;
             next unless $copy =~ s{^((?:Join Filter|Index Cond|Recheck Cond|Hash Cond|Merge Cond|Filter|Sort Key):\s+)(.*)$}{$2};
             my $prefix = $1;
-            my $lexer = $self->_make_lexer( $copy );
+            my $lexer  = $self->_make_lexer( $copy );
             while ( my $x = $lexer->() ) {
                 next unless ref $x;
-                $anonymizer->add( $x->[1] ) if $x->[0] =~ m{\A (?: STRING_LITERAL | QUOTED_IDENTIFIER | IDENTIFIER ) \z}x;
+                $anonymizer->add( $x->[ 1 ] ) if $x->[ 0 ] =~ m{\A (?: STRING_LITERAL | QUOTED_IDENTIFIER | IDENTIFIER ) \z}x;
             }
         }
     }
 
-    for my $key (qw( sub_nodes initplans subplans ) ) {
-        next unless $self->{$key};
-        $_->anonymize_gathering( $anonymizer ) for @{ $self->{$key} };
+    for my $key ( qw( sub_nodes initplans subplans ) ) {
+        next unless $self->{ $key };
+        $_->anonymize_gathering( $anonymizer ) for @{ $self->{ $key } };
     }
 
-    if ($self->{'ctes'}) {
-        $_->anonymize_gathering( $anonymizer ) for values %{ $self->{'ctes'} };
+    if ( $self->{ 'ctes' } ) {
+        $_->anonymize_gathering( $anonymizer ) for values %{ $self->{ 'ctes' } };
     }
     return;
 }
@@ -625,40 +624,56 @@ Helper function which creates HOP::Lexer based lexer for given line of input
 sub _make_lexer {
     my $self = shift;
     my $data = shift;
-    ## gathered from postgres 9.1 with pg_get_keywords()
-    my @pgkeywords = qw(abort absolute access action add admin after aggregate all also alter always analyse analyze
-        and any array as asc assertion assignment asymmetric at attribute authorization backward before begin between
-    bigint binary bit boolean both by cache called cascade cascaded case cast catalog chain char character
-    characteristics check checkpoint class close cluster coalesce collate collation column comment comments commit
-    committed concurrently configuration connection constraint constraints content continue conversion copy cost
-    create cross csv current current_catalog current_date current_role current_schema current_time current_timestamp
-    current_user cursor cycle data database day deallocate dec decimal declare default defaults deferrable deferred
-    definer delete delimiter delimiters desc dictionary disable discard distinct do document domain double drop each
-    else enable encoding encrypted end enum escape except exclude excluding exclusive execute exists explain extension
-    external extract false family fetch first float following for force foreign forward freeze from full function
-    functions global grant granted greatest group handler having header hold hour identity if ilike immediate
-    immutable implicit in including increment index indexes inherit inherits initially inline inner inout input
-    insensitive insert instead int integer intersect interval into invoker is isnull isolation join key label language
-    large last lc_collate lc_ctype leading least left level like limit listen load local localtime localtimestamp
-    location lock mapping match maxvalue minute minvalue mode month move name names national natural nchar next no
-    none not nothing notify notnull nowait null nullif nulls numeric object of off offset oids on only operator option
-    options or order out outer over overlaps overlay owned owner parser partial partition passing password placing
-    plans position preceding precision prepare prepared preserve primary prior privileges procedural procedure quote
-    range read real reassign recheck recursive ref references reindex relative release rename repeatable replace
-    replica reset restart restrict returning returns revoke right role rollback row rows rule savepoint schema scroll
-    search second security select sequence sequences serializable server session session_user set setof share show
-    similar simple smallint some stable standalone start statement statistics stdin stdout storage strict strip
-    substring symmetric sysid system table tables tablespace temp template temporary text then time timestamp to
-    trailing transaction treat trigger trim true truncate trusted type unbounded uncommitted unencrypted union unique
-    unknown unlisten unlogged until update user using vacuum valid validate validator value values varchar variadic
-    varying verbose version view volatile when where whitespace window with without work wrapper write xml
-    xmlattributes xmlconcat xmlelement xmlexists xmlforest xmlparse xmlpi xmlroot xmlserialize year yes zone);
 
-    my $pgkeyword = '(?:' . join('|',@pgkeywords) . ')';
+    ## Got from PostgreSQL 9.2devel with:
+    # SQL # with z as (
+    # SQL #     select
+    # SQL #         typname::text as a,
+    # SQL #         oid::regtype::text as b
+    # SQL #     from
+    # SQL #         pg_type
+    # SQL #     where
+    # SQL #         typrelid = 0
+    # SQL #         and typnamespace = 11
+    # SQL # ),
+    # SQL # d as (
+    # SQL #     select a from z
+    # SQL #     union
+    # SQL #     select b from z
+    # SQL # ),
+    # SQL # f as (
+    # SQL #     select distinct
+    # SQL #         regexp_replace(
+    # SQL #             regexp_replace(
+    # SQL #                 regexp_replace( a, '^_', '' ),
+    # SQL #                 E'\\[\\]$',
+    # SQL #                 ''
+    # SQL #             ),
+    # SQL #             '^"(.*)"$',
+    # SQL #             E'\\1'
+    # SQL #         ) as t
+    # SQL #     from
+    # SQL #         d
+    # SQL # )
+    # SQL # select
+    # SQL #     t
+    # SQL # from
+    # SQL #     f
+    # SQL # order by
+    # SQL #     length(t) desc,
+    # SQL #     t asc;
+
+    # Following regexp was generated by feeding list from above query to:
+    # use Regexp::List;
+    # my $q = Regexp::List->new();
+    # print = $q->list2re( @_ );
+    # It is faster than normal alternative regexp like:
+    # (?:timestamp without time zone|timestamp with time zone|time without time zone|....|xid|xml)
+    my $any_pgtype = qr{(?-xism:(?=[abcdfgilmnoprstuvx])(?:t(?:i(?:me(?:stamp(?:\ with(?:out)?\ time\ zone|tz)?|\ with(?:out)?\ time\ zone|tz)?|nterval|d)|s(?:(?:tz)?range|vector|query)|(?:xid_snapsho|ex)t|rigger)|c(?:har(?:acter(?:\ varying)?)?|i(?:dr?|rcle)|string)|d(?:ate(?:range)?|ouble\ precision)|l(?:anguage_handler|ine|seg)|re(?:g(?:proc(?:edure)?|oper(?:ator)?|c(?:onfig|lass)|dictionary|type)|fcursor|ltime|cord|al)|p(?:o(?:lygon|int)|g_node_tree|ath)|a(?:ny(?:e(?:lement|num)|(?:non)?array|range)?|bstime|clitem)|b(?:i(?:t(?:\ varying)?|gint)|o(?:ol(?:ean)?|x)|pchar|ytea)|f(?:loat[48]|dw_handler)|in(?:t(?:2(?:vector)?|4(?:range)?|8(?:range)?|e(?:r[nv]al|ger))|et)|o(?:id(?:vector)?|paque)|n(?:um(?:range|eric)|ame)|sm(?:allint|gr)|m(?:acaddr|oney)|u(?:nknown|uid)|v(?:ar(?:char|bit)|oid)|x(?:id|ml)|gtsvector))};
 
     my @input_tokens = (
         [ 'STRING_LITERAL',    qr{'(?:''|[^']+)+'} ],
-        [ 'PGTYPECAST',        qr{::"?$pgkeyword"?(?:\s+$pgkeyword)*\b} ],
+        [ 'PGTYPECAST',        qr{::"?_?$any_pgtype"?(?:\[\])?} ],
         [ 'QUOTED_IDENTIFIER', qr{"(?:""|[^"]+)+"} ],
         [ 'AND',               qr{\bAND\b}i ],
         [ 'ANY',               qr{\bANY\b}i ],
@@ -742,15 +757,15 @@ Second stage of anonymization - actual changing strings into anonymized versions
 =cut
 
 sub anonymize_substitute {
-    my $self = shift;
+    my $self       = shift;
     my $anonymizer = shift;
 
-    if ($self->scan_on) {
-        while ( my ($key, $value) = each %{ $self->scan_on } ) {
-            $self->scan_on->{$key} = $anonymizer->anonymized( $value );
+    if ( $self->scan_on ) {
+        while ( my ( $key, $value ) = each %{ $self->scan_on } ) {
+            $self->scan_on->{ $key } = $anonymizer->anonymized( $value );
         }
     }
-    if ($self->extra_info) {
+    if ( $self->extra_info ) {
         my @new_extra_info = ();
         for my $line ( @{ $self->extra_info } ) {
             unless ( $line =~ s{^((?:Join Filter|Index Cond|Recheck Cond|Hash Cond|Merge Cond|Filter|Sort Key):\s+)(.*)$}{$2} ) {
@@ -758,35 +773,38 @@ sub anonymize_substitute {
                 next;
             }
             my $output = $1;
-            my $lexer = $self->_make_lexer( $line );
+            my $lexer  = $self->_make_lexer( $line );
             while ( my $x = $lexer->() ) {
-                if (ref $x) {
-                    if ( $x->[0] eq 'STRING_LITERAL' ) {
-                        $output .= "'" . $anonymizer->anonymized( $x->[1] ) . "'";
-                    } elsif ( $x->[0] eq 'QUOTED_IDENTIFIER' ) {
-                        $output .= '"' . $anonymizer->anonymized( $x->[1] ) . '"';
-                    } elsif ( $x->[0] eq 'IDENTIFIER' ) {
-                        $output .= $anonymizer->anonymized( $x->[1] );
-                    } else {
-                        $output .= $x->[1];
+                if ( ref $x ) {
+                    if ( $x->[ 0 ] eq 'STRING_LITERAL' ) {
+                        $output .= "'" . $anonymizer->anonymized( $x->[ 1 ] ) . "'";
                     }
-                } else {
+                    elsif ( $x->[ 0 ] eq 'QUOTED_IDENTIFIER' ) {
+                        $output .= '"' . $anonymizer->anonymized( $x->[ 1 ] ) . '"';
+                    }
+                    elsif ( $x->[ 0 ] eq 'IDENTIFIER' ) {
+                        $output .= $anonymizer->anonymized( $x->[ 1 ] );
+                    }
+                    else {
+                        $output .= $x->[ 1 ];
+                    }
+                }
+                else {
                     $output .= $x;
                 }
             }
             push @new_extra_info, $output;
         }
-        $self->{'extra_info'} = \@new_extra_info;
+        $self->{ 'extra_info' } = \@new_extra_info;
     }
 
-
-    for my $key (qw( sub_nodes initplans subplans ) ) {
-        next unless $self->{$key};
-        $_->anonymize_substitute( $anonymizer ) for @{ $self->{$key} };
+    for my $key ( qw( sub_nodes initplans subplans ) ) {
+        next unless $self->{ $key };
+        $_->anonymize_substitute( $anonymizer ) for @{ $self->{ $key } };
     }
 
-    if ($self->{'ctes'}) {
-        $_->anonymize_substitute( $anonymizer ) for values %{ $self->{'ctes'} };
+    if ( $self->{ 'ctes' } ) {
+        $_->anonymize_substitute( $anonymizer ) for values %{ $self->{ 'ctes' } };
     }
     return;
 }
