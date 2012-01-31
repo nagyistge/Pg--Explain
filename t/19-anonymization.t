@@ -5,7 +5,7 @@ use Test::Deep;
 use Test::Exception;
 use Data::Dumper;
 use autodie;
-plan 'tests' => 6;
+plan 'tests' => 10;
 
 use Pg::Explain;
 
@@ -17,7 +17,7 @@ my $plan_source = q{                                                            
    ->  Hash Join  (cost=1.14..15.82 rows=45 width=133) (actual time=1.599..1.599 rows=0 loops=1)
          Hash Cond: (c.relnamespace = n.oid)
          ->  Seq Scan on pg_class c  (cost=0.00..13.27 rows=45 width=73) (actual time=0.036..1.419 rows=93 loops=1)
-               Filter: (pg_table_is_visible(oid) AND (relkind = ANY ('{r,v,S,f,""}'::"char"[])))
+               Filter: (pg_table_is_visible(oid) AND (relkind = ANY ('{r,v,S,f,""}'::"char"[])) AND relname = 'timestamp with time zone')
          ->  Hash  (cost=1.10..1.10 rows=3 width=68) (actual time=0.120..0.120 rows=2 loops=1)
                Buckets: 1024  Batches: 1  Memory Usage: 1kB
                ->  Seq Scan on pg_namespace n  (cost=0.00..1.10 rows=3 width=68) (actual time=0.109..0.118 rows=2 loops=1)
@@ -37,6 +37,11 @@ lives_ok(
 );
 
 my $textual = $explain->as_text();
+
+ok( $textual =~ /::"char"\[\]/, 'anonymize() preserves type casting' );
+ok( $textual =~ /::name\b/, 'anonymize() preserves type casting' );
+ok( $textual =~ /::text\b/, 'anonymize() preserves type casting' );
+ok( $textual !~ /timestamp with time zone/, 'anonymize() hides string literals' );
 
 my $reparsed = Pg::Explain->new( 'source' => $textual );
 isa_ok( $reparsed,           'Pg::Explain' );
