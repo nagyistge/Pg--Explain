@@ -1,5 +1,8 @@
 Revision history for Pg-Explain
 
+0.62    2012/01/31
+        - Stop anonymize from changing typecasts to standard pg types
+
 0.61    2011/06/20
         - Add handling of plans with trailing " character, but without leading " character.
 
