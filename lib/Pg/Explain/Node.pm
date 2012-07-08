@@ -205,7 +205,7 @@ sub new {
     croak( 'estimated_total_cost has to be passed to constructor of explain node' )   unless defined $self->estimated_total_cost;
     croak( 'type has to be passed to constructor of explain node' )                   unless defined $self->type;
 
-    if ( $self->type =~ m{ \A ( Seq \s Scan | Bitmap \s+ Heap \s+ Scan) \s on \s (\S+) (?: \s+ (\S+) ) ? \z }xms ) {
+    if ( $self->type =~ m{ \A ( Seq \s Scan | Bitmap \s+ Heap \s+ Scan | Foreign \s+ Scan ) \s on \s (\S+) (?: \s+ (\S+) ) ? \z }xms ) {
         $self->type( $1 );
         $self->scan_on( { 'table_name' => $2, } );
         $self->scan_on->{ 'table_alias' } = $3 if defined $3;
@@ -594,7 +594,11 @@ sub anonymize_gathering {
     if ( $self->extra_info ) {
         for my $line ( @{ $self->extra_info } ) {
             my $copy = $line;
-            next unless $copy =~ s{^((?:Join Filter|Index Cond|Recheck Cond|Hash Cond|Merge Cond|Filter|Sort Key):\s+)(.*)$}{$2};
+            if ( $copy =~ m{^Foreign File:\s+(\S.*?)\s*$} ) {
+                $anonymizer->add( $1 );
+                next;
+            }
+            next unless $copy =~ s{^((?:Join Filter|Index Cond|Recheck Cond|Hash Cond|Merge Cond|Filter|Sort Key|Output):\s+)(.*)$}{$2};
             my $prefix = $1;
             my $lexer  = $self->_make_lexer( $copy );
             while ( my $x = $lexer->() ) {
@@ -768,7 +772,11 @@ sub anonymize_substitute {
     if ( $self->extra_info ) {
         my @new_extra_info = ();
         for my $line ( @{ $self->extra_info } ) {
-            unless ( $line =~ s{^((?:Join Filter|Index Cond|Recheck Cond|Hash Cond|Merge Cond|Filter|Sort Key):\s+)(.*)$}{$2} ) {
+            if ( $line =~ m{^(Foreign File:\s+)(\S.*?)(\s*)$} ) {
+                push @new_extra_info, $1 . $anonymizer->anonymized( $2 ) . $3;
+                next;
+            }
+            unless ( $line =~ s{^((?:Join Filter|Index Cond|Recheck Cond|Hash Cond|Merge Cond|Filter|Sort Key|Output):\s+)(.*)$}{$2} ) {
                 push @new_extra_info, $line;
                 next;
             }
