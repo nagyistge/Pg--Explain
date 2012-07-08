@@ -259,9 +259,9 @@ sub _stringify {
     my $self = shift;
 
     for my $key ( keys %{ $self->{ 'strings' } } ) {
-        my $ints = $self->{'strings'}->{ $key };
+        my $ints = $self->{ 'strings' }->{ $key };
         my @words = map { $self->_word( $_ ) } @{ $ints };
-        $self->{'strings'}->{ $key } = join( '_', @words );
+        $self->{ 'strings' }->{ $key } = join( '_', @words );
     }
 }
 

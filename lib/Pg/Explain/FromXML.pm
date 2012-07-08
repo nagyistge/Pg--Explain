@@ -39,17 +39,17 @@ sub normalize_node_struct {
     }
 
     my $subplans = [];
-    if (
-        ( $struct->{'Plans'} ) &&
-        ( $struct->{'Plans'}->{'Plan'} )
-    ) {
-        if ('HASH' eq ref $struct->{'Plans'}->{'Plan'}) {
-            push @{ $subplans} , $struct->{'Plans'}->{'Plan'};
-        } else {
-            $subplans = $struct->{'Plans'}->{'Plan'};
+    if (   ( $struct->{ 'Plans' } )
+        && ( $struct->{ 'Plans' }->{ 'Plan' } ) )
+    {
+        if ( 'HASH' eq ref $struct->{ 'Plans' }->{ 'Plan' } ) {
+            push @{ $subplans }, $struct->{ 'Plans' }->{ 'Plan' };
+        }
+        else {
+            $subplans = $struct->{ 'Plans' }->{ 'Plan' };
         }
     }
-    $struct->{'Plans'} = $subplans;
+    $struct->{ 'Plans' } = $subplans;
 
     return $struct;
 }

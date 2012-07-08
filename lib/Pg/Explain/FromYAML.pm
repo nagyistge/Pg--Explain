@@ -46,7 +46,7 @@ sub parse_source {
 
     my $struct = Load( $source );
 
-    my $top_node = $self->make_node_from( $struct->[0]->{'Plan'} );
+    my $top_node = $self->make_node_from( $struct->[ 0 ]->{ 'Plan' } );
 
     return $top_node;
 }
