@@ -1,5 +1,10 @@
 Revision history for Pg-Explain
 
+0.63    2012/07/08
+        - Anonymize names of files used by foreign tables
+        - Anonymize names of foreign tables
+        - Anonymize names of columns when dealing with EXPLAIN ANALYZE VERBOSE output with "Output: a, b, c" lines
+
 0.62    2012/01/31
         - Stop anonymize from changing typecasts to standard pg types
 
