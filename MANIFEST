@@ -104,7 +104,11 @@ t/17-as_text/25-plan
 t/17-as_text/26-plan
 t/18-stringanonymizer.t
 t/19-anonymization.t
+t/20-anonymization-of-foreign-files.t
+t/21-perltidy.t
+t/99-manifest.t
 t/perlcriticrc
+t/perltidyrc
 t/plans/01-expect
 t/plans/01-plan
 t/plans/02-expect
