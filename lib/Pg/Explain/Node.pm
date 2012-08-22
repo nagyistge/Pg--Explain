@@ -12,11 +12,11 @@ Pg::Explain::Node - Class representing single node from query plan
 
 =head1 VERSION
 
-Version 0.63
+Version 0.64
 
 =cut
 
-our $VERSION = '0.63';
+our $VERSION = '0.64';
 
 =head1 SYNOPSIS
 
@@ -532,14 +532,15 @@ sub as_text {
             $heading_line .= " " . $S->{ 'table_alias' } if $S->{ 'table_alias' };
         }
     }
-    $heading_line .= sprintf '  (cost=%.3f..%.3f rows=%d width=%d)', $self->estimated_startup_cost, $self->estimated_total_cost, $self->estimated_rows, $self->estimated_row_width;
+    $heading_line .= sprintf '  (cost=%.3f..%.3f rows=%s width=%d)', $self->estimated_startup_cost, $self->estimated_total_cost, $self->estimated_rows, $self->estimated_row_width;
+    print "$heading_line\n";
     if ( $self->is_analyzed ) {
         my $inner;
         if ( 0 == $self->{ 'actual_loops' } ) {
             $inner = 'never executed';
         }
         else {
-            $inner = sprintf 'actual time=%.3f..%.3f rows=%d loops=%d', $self->actual_time_first, $self->actual_time_last, $self->actual_rows, $self->actual_loops;
+            $inner = sprintf 'actual time=%.3f..%.3f rows=%s loops=%d', $self->actual_time_first, $self->actual_time_last, $self->actual_rows, $self->actual_loops;
         }
         $heading_line .= " ($inner)";
     }
