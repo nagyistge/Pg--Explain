@@ -1,5 +1,8 @@
 Revision history for Pg-Explain
 
+0.64    2012/08/22
+        - Fix handling of really large number of estimated rows (over 2^53)
+
 0.63    2012/07/08
         - Anonymize names of files used by foreign tables
         - Anonymize names of foreign tables
