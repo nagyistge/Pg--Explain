@@ -205,7 +205,7 @@ sub new {
     croak( 'estimated_total_cost has to be passed to constructor of explain node' )   unless defined $self->estimated_total_cost;
     croak( 'type has to be passed to constructor of explain node' )                   unless defined $self->type;
 
-    if ( $self->type =~ m{ \A ( Seq \s Scan | Bitmap \s+ Heap \s+ Scan | Foreign \s+ Scan ) \s on \s (\S+) (?: \s+ (\S+) ) ? \z }xms ) {
+    if ( $self->type =~ m{ \A ( Seq \s Scan | Bitmap \s+ Heap \s+ Scan | Foreign \s+ Scan | Update | Insert | Delete ) \s on \s (\S+) (?: \s+ (\S+) ) ? \z }xms ) {
         $self->type( $1 );
         $self->scan_on( { 'table_name' => $2, } );
         $self->scan_on->{ 'table_alias' } = $3 if defined $3;
@@ -228,6 +228,11 @@ sub new {
         $self->type( $1 );
         $self->scan_on( { 'cte_name' => $2, } );
         $self->scan_on->{ 'cte_alias' } = $3 if defined $3;
+    }
+    elsif ( $self->type =~ m{ \A ( Function \s Scan ) \s on \s (\S+) (?: \s+ (\S+) )? \z }xms ) {
+        $self->type( $1 );
+        $self->scan_on( { 'function_name' => $2, } );
+        $self->scan_on->{ 'function_alias' } = $3 if defined $3;
     }
     return $self;
 }
@@ -518,6 +523,10 @@ sub as_text {
             $heading_line .= " on " . $S->{ 'cte_name' };
             $heading_line .= " " . $S->{ 'cte_alias' } if $S->{ 'cte_alias' };
         }
+        elsif ( $S->{ 'function_name' } ) {
+            $heading_line .= " on " . $S->{ 'function_name' };
+            $heading_line .= " " . $S->{ 'function_alias' } if $S->{ 'function_alias' };
+        }
         elsif ( $S->{ 'index_name' } ) {
             if ( $S->{ 'table_name' } ) {
                 $heading_line .= " using " . $S->{ 'index_name' } . " on " . $S->{ 'table_name' };
@@ -533,7 +542,6 @@ sub as_text {
         }
     }
     $heading_line .= sprintf '  (cost=%.3f..%.3f rows=%s width=%d)', $self->estimated_startup_cost, $self->estimated_total_cost, $self->estimated_rows, $self->estimated_row_width;
-    print "$heading_line\n";
     if ( $self->is_analyzed ) {
         my $inner;
         if ( 0 == $self->{ 'actual_loops' } ) {

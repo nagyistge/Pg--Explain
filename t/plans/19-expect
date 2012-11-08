@@ -77,7 +77,11 @@
                                                                                                          'actual_time_last' => '0.041',
                                                                                                          'estimated_startup_cost' => 0,
                                                                                                          'actual_rows' => '11',
-                                                                                                         'type' => 'Function Scan on generate_series s',
+                                                                                                         'type' => 'Function Scan',
+                                                                                                         'scan_on' => {
+                                                                                                             'function_alias' => 's',
+                                                                                                             'function_name' => 'generate_series'
+                                                                                                         },
                                                                                                          'actual_loops' => '1'
                                                                                                        }
                                                                                                      ],

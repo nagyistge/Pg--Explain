@@ -1,5 +1,9 @@
 Revision history for Pg-Explain
 
+0.65    2012/11/08
+        - Fix anonymization of tables in explains of modifying queries (insert/update/delete)
+        - Fix anonymization of function names in function scans
+
 0.64    2012/08/22
         - Fix handling of really large number of estimated rows (over 2^53)
 
