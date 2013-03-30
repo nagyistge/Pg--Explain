@@ -1,5 +1,8 @@
 Revision history for Pg-Explain
 
+0.66    2013/03/30
+        - Fix anonymization of One-time filter: lines.
+
 0.65    2012/11/08
         - Fix anonymization of tables in explains of modifying queries (insert/update/delete)
         - Fix anonymization of function names in function scans
