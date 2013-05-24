@@ -1,5 +1,9 @@
 Revision history for Pg-Explain
 
+0.67    2013/05/24
+        - Fix anonymization of Index Only Scans
+        - Fix perlcritic tests
+
 0.66    2013/03/30
         - Fix anonymization of One-time filter: lines.
 
