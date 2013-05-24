@@ -1,4 +1,5 @@
 package Pg::Explain;
+use v5.6;
 use strict;
 use autodie;
 use Carp;
