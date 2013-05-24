@@ -1,4 +1,4 @@
-#!perl -T
+#!perl
 use Test::More tests => 17;
 use Test::Exception;
 use Test::Deep;
