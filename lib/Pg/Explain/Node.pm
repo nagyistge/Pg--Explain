@@ -214,7 +214,7 @@ sub new {
         $self->type( $1 );
         $self->scan_on( { 'index_name' => $2, } );
     }
-    elsif ( $self->type =~ m{ \A (Index \s Scan (?: \s Backward )? ) \s using \s (\S+) \s on \s (\S+) (?: \s+ (\S+) ) ? \z }xms ) {
+    elsif ( $self->type =~ m{ \A (Index (?: \s Only )? \s Scan (?: \s Backward )? ) \s using \s (\S+) \s on \s (\S+) (?: \s+ (\S+) ) ? \z }xms ) {
         $self->type( $1 );
         $self->scan_on(
             {
