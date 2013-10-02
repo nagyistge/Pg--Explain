@@ -1,5 +1,9 @@
 Revision history for Pg-Explain
 
+0.68    2013/10/01
+        - Fix extracting of table/index info from "Index Only Scan" nodes from
+        YAML/XML/JSON explains.
+
 0.67    2013/05/24
         - Fix anonymization of Index Only Scans
         - Fix perlcritic tests

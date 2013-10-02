@@ -64,6 +64,8 @@ t/15-yaml-plans/5.expect
 t/15-yaml-plans/5.yaml
 t/15-yaml-plans/6.expect
 t/15-yaml-plans/6.yaml
+t/15-yaml-plans/7.expect
+t/15-yaml-plans/7.yaml
 t/16-ctes.t
 t/16-ctes/1-text.expect
 t/16-ctes/1-text.plan

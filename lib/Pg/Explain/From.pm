@@ -9,11 +9,11 @@ Pg::Explain::From - Base class for parsers of non-text explain formats.
 
 =head1 VERSION
 
-Version 0.67
+Version 0.68
 
 =cut
 
-our $VERSION = '0.67';
+our $VERSION = '0.68';
 
 =head1 SYNOPSIS
 
@@ -106,7 +106,7 @@ sub make_node_from {
         );
 
     }
-    elsif ( $struct->{ 'Node Type' } =~ m{\AIndex Scan(?: Backward)?\z} ) {
+    elsif ( $struct->{ 'Node Type' } =~ m{\AIndex(?: Only)? Scan(?: Backward)?\z} ) {
         $new_node->scan_on(
             {
                 'table_name'  => $struct->{ 'Relation Name' },
