@@ -112,6 +112,7 @@ t/21-perltidy.t
 t/22-anonymization-of-non-select-plans.t
 t/23-anonymization-of-one-time-filters.t
 t/24-anonymization-of-index-only-scans.t
+t/25-anonymization-of-cte-names.t
 t/99-manifest.t
 t/perlcriticrc
 t/perltidyrc

@@ -12,11 +12,11 @@ Pg::Explain::Node - Class representing single node from query plan
 
 =head1 VERSION
 
-Version 0.68
+Version 0.69
 
 =cut
 
-our $VERSION = '0.68';
+our $VERSION = '0.69';
 
 =head1 SYNOPSIS
 
@@ -600,6 +600,10 @@ sub anonymize_gathering {
         $anonymizer->add( values %{ $self->scan_on } );
     }
 
+    if ( $self->cte_order ) {
+        $anonymizer->add( $self->{ 'cte_order' } );
+    }
+
     if ( $self->extra_info ) {
         for my $line ( @{ $self->extra_info } ) {
             my $copy = $line;
@@ -779,6 +783,17 @@ sub anonymize_substitute {
             $self->scan_on->{ $key } = $anonymizer->anonymized( $value );
         }
     }
+
+    if ( $self->cte_order ) {
+        my @new_order = ();
+        for my $cte_name ( @{ $self->cte_order } ) {
+            my $new_name = $anonymizer->anonymized( $cte_name );
+            push @new_order, $new_name;
+            $self->ctes->{ $new_name } = delete $self->{ 'ctes' }->{ $cte_name };
+        }
+        $self->cte_order( \@new_order );
+    }
+
     if ( $self->extra_info ) {
         my @new_extra_info = ();
         for my $line ( @{ $self->extra_info } ) {

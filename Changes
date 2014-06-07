@@ -1,5 +1,8 @@
 Revision history for Pg-Explain
 
+0.69    2014/06/08
+        - Anonymize CTE names, per gripe from Brian Dunavant
+
 0.68    2013/10/01
         - Fix extracting of table/index info from "Index Only Scan" nodes from
         YAML/XML/JSON explains.
