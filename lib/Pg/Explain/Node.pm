@@ -12,11 +12,11 @@ Pg::Explain::Node - Class representing single node from query plan
 
 =head1 VERSION
 
-Version 0.69
+Version 0.70
 
 =cut
 
-our $VERSION = '0.69';
+our $VERSION = '0.70';
 
 =head1 SYNOPSIS
 
@@ -544,11 +544,14 @@ sub as_text {
     $heading_line .= sprintf '  (cost=%.3f..%.3f rows=%s width=%d)', $self->estimated_startup_cost, $self->estimated_total_cost, $self->estimated_rows, $self->estimated_row_width;
     if ( $self->is_analyzed ) {
         my $inner;
-        if ( 0 == $self->{ 'actual_loops' } ) {
+        if ( $self->never_executed ) {
             $inner = 'never executed';
         }
-        else {
+        elsif ( defined $self->actual_time_last ) {
             $inner = sprintf 'actual time=%.3f..%.3f rows=%s loops=%d', $self->actual_time_first, $self->actual_time_last, $self->actual_rows, $self->actual_loops;
+        }
+        else {
+            $inner = sprintf 'actual rows=%s loops=%d', $self->actual_rows, $self->actual_loops;
         }
         $heading_line .= " ($inner)";
     }

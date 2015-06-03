@@ -1,5 +1,8 @@
 Revision history for Pg-Explain
 
+0.70    2014/06/08
+        - Allow parsing of plans without timing information, per request from Karl Bartel
+
 0.69    2014/06/08
         - Anonymize CTE names, per gripe from Brian Dunavant
 

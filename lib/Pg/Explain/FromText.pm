@@ -9,11 +9,11 @@ Pg::Explain::FromText - Parser for text based explains
 
 =head1 VERSION
 
-Version 0.69
+Version 0.70
 
 =cut
 
-our $VERSION = '0.69';
+our $VERSION = '0.70';
 
 =head1 SYNOPSIS
 
@@ -60,20 +60,21 @@ sub parse_source {
         $line =~ s/"\z//;
 
         if (
-            my @catch =
             $line =~ m{
                 \A
-                (\s* -> \s* | \s* )
-                (\S.*?)
+                (?<prefix>\s* -> \s* | \s* )
+                (?<type>\S.*?)
                 \s+
-                \( cost=(\d+\.\d+)\.\.(\d+\.\d+) \s+ rows=(\d+) \s+ width=(\d+) \)
+                \( cost=(?<estimated_startup_cost>\d+\.\d+)\.\.(?<estimated_total_cost>\d+\.\d+) \s+ rows=(?<estimated_rows>\d+) \s+ width=(?<estimated_row_width>\d+) \)
                 (?:
                     \s+
                     \(
                         (?:
-                            actual \s time=(\d+\.\d+)\.\.(\d+\.\d+) \s rows=(\d+) \s loops=(\d+)
+                            actual \s time=(?<actual_time_first>\d+\.\d+)\.\.(?<actual_time_last>\d+\.\d+) \s rows=(?<actual_rows>\d+) \s loops=(?<actual_loops>\d+)
                             |
-                            ( never \s+ executed )
+                            actual \s rows=(?<actual_rows>\d+) \s loops=(?<actual_loops>\d+)
+                            |
+                            (?<never_executed> never \s+ executed )
                         )
                     \)
                 )?
@@ -82,37 +83,29 @@ sub parse_source {
             }xms
            )
         {
-            my $new_node = Pg::Explain::Node->new(
-                'type'                   => $catch[ 1 ],
-                'estimated_startup_cost' => $catch[ 2 ],
-                'estimated_total_cost'   => $catch[ 3 ],
-                'estimated_rows'         => $catch[ 4 ],
-                'estimated_row_width'    => $catch[ 5 ],
-                'actual_time_first'      => $catch[ 6 ],
-                'actual_time_last'       => $catch[ 7 ],
-                'actual_rows'            => $catch[ 8 ],
-                'actual_loops'           => $catch[ 9 ],
-            );
-            if ( defined $catch[ 10 ] && $catch[ 10 ] =~ m{never \s+ executed }xms ) {
+            my $new_node = Pg::Explain::Node->new( %+ );
+            if ( defined $+{ 'never_executed' } ) {
                 $new_node->actual_loops( 0 );
                 $new_node->never_executed( 1 );
             }
             my $element = { 'node' => $new_node, 'subelement-type' => 'subnode', };
 
+            my $prefix_length = length $+{ 'prefix' };
+
             if ( 0 == scalar keys %element_at_depth ) {
-                $element_at_depth{ length $catch[ 0 ] } = $element;
+                $element_at_depth{ $prefix_length } = $element;
                 $top_node = $new_node;
                 next LINE;
             }
             my @existing_depths = sort { $a <=> $b } keys %element_at_depth;
-            for my $key ( grep { $_ >= length( $catch[ 0 ] ) } @existing_depths ) {
+            for my $key ( grep { $_ >= $prefix_length } @existing_depths ) {
                 delete $element_at_depth{ $key };
             }
 
             my $maximal_depth = ( sort { $b <=> $a } keys %element_at_depth )[ 0 ];
             my $previous_element = $element_at_depth{ $maximal_depth };
 
-            $element_at_depth{ length $catch[ 0 ] } = $element;
+            $element_at_depth{ $prefix_length } = $element;
 
             if ( $previous_element->{ 'subelement-type' } eq 'subnode' ) {
                 $previous_element->{ 'node' }->add_sub_node( $new_node );
