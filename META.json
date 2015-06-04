@@ -34,42 +34,43 @@
             "HOP::Lexer" : "0",
             "JSON" : "0",
             "XML::Simple" : "0",
-            "YAML" : "0"
+            "YAML" : "0",
+            "perl" : "5.010"
          }
       }
    },
    "provides" : {
       "Pg::Explain" : {
          "file" : "lib/Pg/Explain.pm",
-         "version" : "0.70"
+         "version" : "0.71"
       },
       "Pg::Explain::From" : {
          "file" : "lib/Pg/Explain/From.pm",
-         "version" : "0.70"
+         "version" : "0.71"
       },
       "Pg::Explain::FromJSON" : {
          "file" : "lib/Pg/Explain/FromJSON.pm",
-         "version" : "0.70"
+         "version" : "0.71"
       },
       "Pg::Explain::FromText" : {
          "file" : "lib/Pg/Explain/FromText.pm",
-         "version" : "0.70"
+         "version" : "0.71"
       },
       "Pg::Explain::FromXML" : {
          "file" : "lib/Pg/Explain/FromXML.pm",
-         "version" : "0.70"
+         "version" : "0.71"
       },
       "Pg::Explain::FromYAML" : {
          "file" : "lib/Pg/Explain/FromYAML.pm",
-         "version" : "0.70"
+         "version" : "0.71"
       },
       "Pg::Explain::Node" : {
          "file" : "lib/Pg/Explain/Node.pm",
-         "version" : "0.70"
+         "version" : "0.71"
       },
       "Pg::Explain::StringAnonymizer" : {
          "file" : "lib/Pg/Explain/StringAnonymizer.pm",
-         "version" : "0.70"
+         "version" : "0.71"
       }
    },
    "release_status" : "stable",
@@ -78,5 +79,5 @@
          "http://dev.perl.org/licenses/"
       ]
    },
-   "version" : "0.70"
+   "version" : "0.71"
 }

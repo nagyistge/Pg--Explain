@@ -1,6 +1,9 @@
 Revision history for Pg-Explain
 
-0.70    2014/06/08
+0.71    2014/06/04
+        - Fix missing dependency, no functional changes
+
+0.70    2014/06/03
         - Allow parsing of plans without timing information, per request from Karl Bartel
 
 0.69    2014/06/08
