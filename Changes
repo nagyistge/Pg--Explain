@@ -1,5 +1,8 @@
 Revision history for Pg-Explain
 
+0.72    2015/10/13
+        - Add anonymization of subquery scan names
+
 0.71    2014/06/04
         - Fix missing dependency, no functional changes
 

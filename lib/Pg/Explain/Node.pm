@@ -12,11 +12,11 @@ Pg::Explain::Node - Class representing single node from query plan
 
 =head1 VERSION
 
-Version 0.71
+Version 0.72
 
 =cut
 
-our $VERSION = '0.71';
+our $VERSION = '0.72';
 
 =head1 SYNOPSIS
 
@@ -233,6 +233,10 @@ sub new {
         $self->type( $1 );
         $self->scan_on( { 'function_name' => $2, } );
         $self->scan_on->{ 'function_alias' } = $3 if defined $3;
+    }
+    elsif ( $self->type =~ m{ \A ( Subquery \s Scan ) \s on \s (\S+) \z }xms ) {
+        $self->type( $1 );
+        $self->scan_on( { 'subquery_name' => $2, } );
     }
     return $self;
 }
@@ -535,6 +539,9 @@ sub as_text {
             else {
                 $heading_line .= " on " . $S->{ 'index_name' };
             }
+        }
+        elsif ( $S->{ 'subquery_name' } ) {
+            $heading_line .= " on " . $S->{ 'subquery_name' },;
         }
         else {
             $heading_line .= " on " . $S->{ 'table_name' };
