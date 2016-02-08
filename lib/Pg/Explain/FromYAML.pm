@@ -10,11 +10,11 @@ Pg::Explain::FromYAML - Parser for explains in YAML format
 
 =head1 VERSION
 
-Version 0.72
+Version 0.73
 
 =cut
 
-our $VERSION = '0.72';
+our $VERSION = '0.73';
 
 =head1 SYNOPSIS
 

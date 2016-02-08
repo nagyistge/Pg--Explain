@@ -1,5 +1,8 @@
 Revision history for Pg-Explain
 
+0.73    2016/02/08
+        - Add anonymization of grouping keys
+
 0.72    2015/10/13
         - Add anonymization of subquery scan names
 

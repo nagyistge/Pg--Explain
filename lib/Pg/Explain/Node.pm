@@ -12,11 +12,11 @@ Pg::Explain::Node - Class representing single node from query plan
 
 =head1 VERSION
 
-Version 0.72
+Version 0.73
 
 =cut
 
-our $VERSION = '0.72';
+our $VERSION = '0.73';
 
 =head1 SYNOPSIS
 
@@ -621,7 +621,7 @@ sub anonymize_gathering {
                 $anonymizer->add( $1 );
                 next;
             }
-            next unless $copy =~ s{^((?:Join Filter|Index Cond|Recheck Cond|Hash Cond|Merge Cond|Filter|Sort Key|Output|One-Time Filter):\s+)(.*)$}{$2};
+            next unless $copy =~ s{^((?:Join Filter|Index Cond|Recheck Cond|Hash Cond|Merge Cond|Filter|Group Key|Sort Key|Output|One-Time Filter):\s+)(.*)$}{$2};
             my $prefix = $1;
             my $lexer  = $self->_make_lexer( $copy );
             while ( my $x = $lexer->() ) {
@@ -811,7 +811,7 @@ sub anonymize_substitute {
                 push @new_extra_info, $1 . $anonymizer->anonymized( $2 ) . $3;
                 next;
             }
-            unless ( $line =~ s{^((?:Join Filter|Index Cond|Recheck Cond|Hash Cond|Merge Cond|Filter|Sort Key|Output|One-Time Filter):\s+)(.*)$}{$2} ) {
+            unless ( $line =~ s{^((?:Join Filter|Index Cond|Recheck Cond|Hash Cond|Merge Cond|Filter|Group Key|Sort Key|Output|One-Time Filter):\s+)(.*)$}{$2} ) {
                 push @new_extra_info, $line;
                 next;
             }
